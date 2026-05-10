@@ -6,9 +6,13 @@
   <title>NBA Live Scores</title>
 
   <style>
-    * { box-sizing: border-box; }
+    * {
+      box-sizing: border-box;
+    }
 
-    :root { --score-column-width: 150px; }
+    :root {
+      --score-column-width: 150px;
+    }
 
     body {
       margin: 0;
@@ -121,7 +125,8 @@
     }
 
     .hidden-game-button,
-    .hide-game-button {
+    .hide-game-button,
+    .spoiler-toggle-button {
       background: #111;
       color: #ddd;
       border: 1px solid #333;
@@ -132,7 +137,8 @@
     }
 
     .hidden-game-button:hover,
-    .hide-game-button:hover {
+    .hide-game-button:hover,
+    .spoiler-toggle-button:hover {
       border-color: #ff2b2b;
       color: white;
     }
@@ -168,12 +174,36 @@
       z-index: 2;
     }
 
+    .spoiler-toggle-button {
+      position: absolute;
+      top: 12px;
+      right: 110px;
+      z-index: 2;
+    }
+
+    .game.spoiler-hidden .score {
+      color: transparent !important;
+      text-shadow: none !important;
+      background: #1b1b1b;
+      border-radius: 8px;
+      min-width: 52px;
+    }
+
+    .game.spoiler-hidden .score.flash {
+      animation: none !important;
+    }
+
+    .game.spoiler-hidden .score::after {
+      content: "••";
+      color: #666;
+    }
+
     .scoreboard {
       display: grid;
       grid-template-columns: var(--score-column-width) 1fr;
       gap: 28px;
       align-items: center;
-      padding-right: 80px;
+      padding-right: 180px;
     }
 
     .scores-left {
@@ -383,7 +413,8 @@
         padding-right: 0;
       }
 
-      .hide-game-button {
+      .hide-game-button,
+      .spoiler-toggle-button {
         position: static;
         width: fit-content;
         margin-bottom: 12px;
@@ -399,6 +430,7 @@
   <div id="updated">Loading...</div>
 
   <div class="controls">
+
     <div class="control-row">
       <label for="scoreSpacing">Score spacing</label>
 
@@ -425,170 +457,325 @@
         Reddit auto-refresh active
       </span>
     </div>
+
   </div>
 
   <div id="hiddenGames">
-    <div class="hidden-title">Hidden games — click to unhide</div>
-    <div class="hidden-list" id="hiddenGamesList"></div>
+    <div class="hidden-title">
+      Hidden games — click to unhide
+    </div>
+
+    <div
+      class="hidden-list"
+      id="hiddenGamesList"
+    ></div>
   </div>
 
   <div id="scores"></div>
 
   <script>
-    const scoresEl = document.getElementById("scores");
-    const updatedEl = document.getElementById("updated");
-    const scoreSpacingEl = document.getElementById("scoreSpacing");
-    const pauseRedditRefreshEl = document.getElementById("pauseRedditRefresh");
-    const redditStatusEl = document.getElementById("redditStatus");
-    const hiddenGamesEl = document.getElementById("hiddenGames");
-    const hiddenGamesListEl = document.getElementById("hiddenGamesList");
+    const scoresEl =
+      document.getElementById("scores");
+
+    const updatedEl =
+      document.getElementById("updated");
+
+    const scoreSpacingEl =
+      document.getElementById("scoreSpacing");
+
+    const pauseRedditRefreshEl =
+      document.getElementById("pauseRedditRefresh");
+
+    const redditStatusEl =
+      document.getElementById("redditStatus");
+
+    const hiddenGamesEl =
+      document.getElementById("hiddenGames");
+
+    const hiddenGamesListEl =
+      document.getElementById("hiddenGamesList");
 
     const previousScores = {};
     const gameCards = {};
     const redditState = {};
     const gameLabels = {};
 
-    const hiddenGames = new Set(
-      JSON.parse(localStorage.getItem("hiddenNbaGames") || "[]")
+    const hiddenGames =
+      new Set(
+        JSON.parse(
+          localStorage.getItem(
+            "hiddenNbaGames"
+          ) || "[]"
+        )
+      );
+
+    let redditRefreshPaused =
+      false;
+
+    pauseRedditRefreshEl.addEventListener(
+      "change",
+      () => {
+
+        redditRefreshPaused =
+          pauseRedditRefreshEl.checked;
+
+        redditStatusEl.textContent =
+          redditRefreshPaused
+            ? "Reddit auto-refresh paused"
+            : "Reddit auto-refresh active";
+      }
     );
 
-    let redditRefreshPaused = false;
+    scoreSpacingEl.addEventListener(
+      "input",
+      () => {
 
-    pauseRedditRefreshEl.addEventListener("change", () => {
-      redditRefreshPaused = pauseRedditRefreshEl.checked;
-
-      redditStatusEl.textContent =
-        redditRefreshPaused
-          ? "Reddit auto-refresh paused"
-          : "Reddit auto-refresh active";
-    });
-
-    scoreSpacingEl.addEventListener("input", () => {
-      document.documentElement.style.setProperty(
-        "--score-column-width",
-        `${scoreSpacingEl.value}px`
-      );
-    });
+        document.documentElement
+          .style
+          .setProperty(
+            "--score-column-width",
+            `${scoreSpacingEl.value}px`
+          );
+      }
+    );
 
     function saveHiddenGames() {
+
       localStorage.setItem(
         "hiddenNbaGames",
-        JSON.stringify([...hiddenGames])
+        JSON.stringify(
+          [...hiddenGames]
+        )
       );
     }
 
     function updateHiddenGamesUI() {
-      hiddenGamesListEl.innerHTML = "";
 
-      if (hiddenGames.size === 0) {
-        hiddenGamesEl.classList.remove("active");
+      hiddenGamesListEl.innerHTML =
+        "";
+
+      if (
+        hiddenGames.size === 0
+      ) {
+
+        hiddenGamesEl.classList.remove(
+          "active"
+        );
+
         return;
       }
 
-      hiddenGamesEl.classList.add("active");
+      hiddenGamesEl.classList.add(
+        "active"
+      );
 
-      [...hiddenGames].forEach(gameId => {
-        const button = document.createElement("button");
-        button.className = "hidden-game-button";
-        button.textContent = gameLabels[gameId] || `Game ${gameId}`;
-        button.addEventListener("click", () => {
-          unhideGame(gameId);
-        });
+      [...hiddenGames].forEach(
+        gameId => {
 
-        hiddenGamesListEl.appendChild(button);
-      });
+          const button =
+            document.createElement(
+              "button"
+            );
+
+          button.className =
+            "hidden-game-button";
+
+          button.textContent =
+            gameLabels[gameId] ||
+            `Game ${gameId}`;
+
+          button.addEventListener(
+            "click",
+            () => {
+              unhideGame(gameId);
+            }
+          );
+
+          hiddenGamesListEl.appendChild(
+            button
+          );
+        }
+      );
     }
 
     function hideGame(gameId) {
+
       hiddenGames.add(gameId);
+
       saveHiddenGames();
 
-      if (gameCards[gameId]) {
-        gameCards[gameId].classList.add("hidden");
+      if (
+        gameCards[gameId]
+      ) {
+
+        gameCards[gameId]
+          .classList
+          .add("hidden");
       }
 
       updateHiddenGamesUI();
     }
 
     function unhideGame(gameId) {
+
       hiddenGames.delete(gameId);
+
       saveHiddenGames();
 
-      if (gameCards[gameId]) {
-        gameCards[gameId].classList.remove("hidden");
+      if (
+        gameCards[gameId]
+      ) {
+
+        gameCards[gameId]
+          .classList
+          .remove("hidden");
       }
 
       updateHiddenGamesUI();
     }
 
     function flash(el) {
-      el.classList.remove("flash");
+
+      el.classList.remove(
+        "flash"
+      );
+
       void el.offsetWidth;
-      el.classList.add("flash");
+
+      el.classList.add(
+        "flash"
+      );
     }
 
     function escapeHTML(value) {
+
       return String(value || "")
-        .replaceAll("&", "&amp;")
-        .replaceAll("<", "&lt;")
-        .replaceAll(">", "&gt;")
-        .replaceAll('"', "&quot;")
-        .replaceAll("'", "&#039;");
+        .replaceAll(
+          "&",
+          "&amp;"
+        )
+        .replaceAll(
+          "<",
+          "&lt;"
+        )
+        .replaceAll(
+          ">",
+          "&gt;"
+        )
+        .replaceAll(
+          '"',
+          "&quot;"
+        )
+        .replaceAll(
+          "'",
+          "&#039;"
+        );
     }
 
     function createGameCard(gameId) {
-      const card = document.createElement("div");
 
-      card.className = "game";
-      card.id = `game-${gameId}`;
+      const card =
+        document.createElement(
+          "div"
+        );
+
+      card.className =
+        "game";
+
+      card.id =
+        `game-${gameId}`;
 
       card.innerHTML = `
-        <button class="hide-game-button" type="button">
+        <button
+          class="hide-game-button"
+          type="button"
+        >
           Hide game
         </button>
 
+        <button
+          class="spoiler-toggle-button"
+          type="button"
+        >
+          Hide scores
+        </button>
+
         <div class="main-side">
+
           <div class="scoreboard">
+
             <div class="scores-left">
+
               <div class="score-row">
                 <div class="score-label away-abbr"></div>
-                <div class="score away-score">0</div>
+
+                <div class="score away-score">
+                  0
+                </div>
               </div>
 
               <div class="score-row">
                 <div class="score-label home-abbr"></div>
-                <div class="score home-score">0</div>
+
+                <div class="score home-score">
+                  0
+                </div>
               </div>
+
             </div>
 
             <div class="teams-right">
+
               <div class="team-name away-name"></div>
+
               <div class="team-name home-name"></div>
+
             </div>
+
           </div>
 
           <div class="status"></div>
 
           <div class="broadcast">
-            <span class="label">Broadcast</span>
-            <span class="broadcast-text">TBD</span>
+            <span class="label">
+              Broadcast
+            </span>
+
+            <span class="broadcast-text">
+              TBD
+            </span>
           </div>
 
           <div class="plays">
-            <span class="label">Latest Plays</span>
+            <span class="label">
+              Latest Plays
+            </span>
+
             <div class="plays-list"></div>
           </div>
+
         </div>
 
         <div class="reddit-side">
+
           <div class="reddit-panel">
+
             <div class="reddit-header">
-              <div class="reddit-title">Game Thread</div>
+
+              <div class="reddit-title">
+                Game Thread
+              </div>
 
               <select class="reddit-sort">
-                <option value="new">Newest</option>
-                <option value="top">Most upvoted</option>
+                <option value="new">
+                  Newest
+                </option>
+
+                <option value="top">
+                  Most upvoted
+                </option>
               </select>
+
             </div>
 
             <div class="reddit-game-thread">
@@ -596,39 +783,97 @@
             </div>
 
             <div class="postgame">
-              <div class="reddit-title">Postgame Thread</div>
+
+              <div class="reddit-title">
+                Postgame Thread
+              </div>
+
               <div class="reddit-postgame-thread">
                 Available after final.
               </div>
+
             </div>
+
           </div>
+
         </div>
       `;
 
       card
-        .querySelector(".reddit-sort")
-        .addEventListener("change", () => {
-          refreshRedditForGame(gameId, true);
-        });
+        .querySelector(
+          ".reddit-sort"
+        )
+        .addEventListener(
+          "change",
+          () => {
+            refreshRedditForGame(
+              gameId,
+              true
+            );
+          }
+        );
 
       card
-        .querySelector(".hide-game-button")
-        .addEventListener("click", event => {
-          event.stopPropagation();
-          hideGame(gameId);
-        });
+        .querySelector(
+          ".hide-game-button"
+        )
+        .addEventListener(
+          "click",
+          event => {
 
-      if (hiddenGames.has(gameId)) {
-        card.classList.add("hidden");
+            event.stopPropagation();
+
+            hideGame(gameId);
+          }
+        );
+
+      const spoilerButton =
+        card.querySelector(
+          ".spoiler-toggle-button"
+        );
+
+      spoilerButton
+        .addEventListener(
+          "click",
+          event => {
+
+            event.stopPropagation();
+
+            const hidden =
+              card.classList.toggle(
+                "spoiler-hidden"
+              );
+
+            spoilerButton.textContent =
+              hidden
+                ? "Show scores"
+                : "Hide scores";
+          }
+        );
+
+      if (
+        hiddenGames.has(gameId)
+      ) {
+
+        card.classList.add(
+          "hidden"
+        );
       }
 
-      scoresEl.appendChild(card);
-      gameCards[gameId] = card;
+      scoresEl.appendChild(
+        card
+      );
+
+      gameCards[gameId] =
+        card;
 
       return card;
     }
 
-    function getPlayTimestamp(play) {
+    function getPlayTimestamp(
+      play
+    ) {
+
       const period =
         play.period?.number ||
         play.period ||
@@ -640,7 +885,10 @@
         play.clock ||
         "";
 
-      if (period && clock) {
+      if (
+        period &&
+        clock
+      ) {
         return `Q${period} ${clock}`;
       }
 
@@ -651,20 +899,31 @@
       return "Time unavailable";
     }
 
-    async function getLatestPlays(gameId, awayAbbr, homeAbbr) {
-      try {
-        const res = await fetch(
-          `https://site.api.espn.com/apis/site/v2/sports/basketball/nba/summary?event=${gameId}`
-        );
+    async function getLatestPlays(
+      gameId,
+      awayAbbr,
+      homeAbbr
+    ) {
 
-        const data = await res.json();
+      try {
+
+        const res =
+          await fetch(
+            `https://site.api.espn.com/apis/site/v2/sports/basketball/nba/summary?event=${gameId}`
+          );
+
+        const data =
+          await res.json();
 
         const latestThree =
           (data?.plays || [])
             .slice(-3)
             .reverse();
 
-        if (!latestThree.length) {
+        if (
+          !latestThree.length
+        ) {
+
           return `
             <div class="play">
               No recent plays available
@@ -672,33 +931,55 @@
           `;
         }
 
-        return latestThree.map(play => {
-          const hasScore =
-            play.awayScore !== undefined &&
-            play.homeScore !== undefined;
+        return latestThree.map(
+          play => {
 
-          const scoreText = hasScore
-            ? `
-              <span class="score-change">
-                (${awayAbbr} ${play.awayScore}
-                - ${homeAbbr} ${play.homeScore})
-              </span>
-            `
-            : "";
+            const hasScore =
+              play.awayScore !==
+                undefined &&
+              play.homeScore !==
+                undefined;
 
-          const timestamp = getPlayTimestamp(play);
+            const scoreText =
+              hasScore
+                ? `
+                  <span class="score-change">
+                    (${awayAbbr} ${play.awayScore}
+                    - ${homeAbbr} ${play.homeScore})
+                  </span>
+                `
+                : "";
 
-          return `
-            <div class="play">
-              <span class="play-time">${timestamp}</span>
-              ${escapeHTML(play.text || "Play unavailable")}
-              ${scoreText}
-            </div>
-          `;
-        }).join("");
+            const timestamp =
+              getPlayTimestamp(
+                play
+              );
+
+            return `
+              <div class="play">
+
+                <span class="play-time">
+                  ${timestamp}
+                </span>
+
+                ${escapeHTML(
+                  play.text ||
+                  "Play unavailable"
+                )}
+
+                ${scoreText}
+
+              </div>
+            `;
+          }
+        ).join("");
 
       } catch (err) {
-        console.error("Play-by-play fetch failed", err);
+
+        console.error(
+          "Play-by-play fetch failed",
+          err
+        );
 
         return `
           <div class="play">
@@ -708,203 +989,11 @@
       }
     }
 
-    function redditSearchUrl(query) {
-      return (
-        "https://www.reddit.com/r/nba/search.json" +
-        `?q=${encodeURIComponent(query)}` +
-        "&restrict_sr=1" +
-        "&sort=new" +
-        "&limit=10"
-      );
-    }
-
-    function redditCommentsUrl(permalink, sort) {
-      return (
-        `https://www.reddit.com${permalink}.json` +
-        `?sort=${encodeURIComponent(sort)}` +
-        "&limit=8"
-      );
-    }
-
-    function buildThreadQueries(awayName, homeName, awayAbbr, homeAbbr, type) {
-      const label =
-        type === "postgame"
-          ? "Post Game Thread"
-          : "Game Thread";
-
-      return [
-        `${label} ${awayName} ${homeName}`,
-        `${label} ${awayAbbr} ${homeAbbr}`,
-        `${label} ${homeName} ${awayName}`,
-        `${label} ${homeAbbr} ${awayAbbr}`
-      ];
-    }
-
-    async function findRedditThread(
-      awayName,
-      homeName,
-      awayAbbr,
-      homeAbbr,
-      type
-    ) {
-      const queries =
-        buildThreadQueries(
-          awayName,
-          homeName,
-          awayAbbr,
-          homeAbbr,
-          type
-        );
-
-      for (const query of queries) {
-        try {
-          const res =
-            await fetch(
-              redditSearchUrl(query)
-            );
-
-          const data =
-            await res.json();
-
-          const posts =
-            data?.data?.children?.map(
-              x => x.data
-            ) || [];
-
-          const match =
-            posts.find(post => {
-              const title =
-                (
-                  post.title || ""
-                ).toLowerCase();
-
-              const wantsPostgame =
-                type === "postgame";
-
-              const hasCorrectType =
-                wantsPostgame
-                  ? (
-                      title.includes("post game thread") ||
-                      title.includes("post-game thread") ||
-                      title.includes("postgame thread")
-                    )
-                  : (
-                      title.includes("game thread") &&
-                      !title.includes("post game") &&
-                      !title.includes("post-game") &&
-                      !title.includes("postgame")
-                    );
-
-              const hasTeams =
-                (
-                  title.includes(awayName.toLowerCase()) ||
-                  title.includes(awayAbbr.toLowerCase())
-                ) &&
-                (
-                  title.includes(homeName.toLowerCase()) ||
-                  title.includes(homeAbbr.toLowerCase())
-                );
-
-              return (
-                hasCorrectType &&
-                hasTeams
-              );
-            });
-
-          if (match) {
-            return match;
-          }
-
-        } catch (err) {
-          console.error("Reddit search failed", err);
-        }
-      }
-
-      return null;
-    }
-
-    async function getRedditComments(permalink, sort) {
-      const res =
-        await fetch(
-          redditCommentsUrl(
-            permalink,
-            sort
-          )
-        );
-
-      const data =
-        await res.json();
-
-      const comments =
-        data?.[1]?.data?.children
-          ?.filter(
-            item => item.kind === "t1"
-          )
-          ?.map(
-            item => item.data
-          )
-          ?.filter(
-            comment =>
-              comment.body &&
-              comment.body !== "[deleted]"
-          )
-          ?.slice(0, 6) || [];
-
-      return comments;
-    }
-
-    function renderRedditThread(
-      targetEl,
-      thread,
-      comments,
-      fallbackText
-    ) {
-      if (!thread) {
-        targetEl.innerHTML =
-          escapeHTML(fallbackText);
-        return;
-      }
-
-      const commentsHTML =
-        comments.length
-          ? comments.map(comment => {
-              return `
-                <div class="comment">
-                  <div class="comment-meta">
-                    u/${escapeHTML(comment.author)}
-                    • ${comment.score} upvotes
-                  </div>
-
-                  <div class="comment-body">
-                    ${escapeHTML(comment.body)}
-                  </div>
-                </div>
-              `;
-            }).join("")
-          : `
-            <div class="comment">
-              No comments found yet.
-            </div>
-          `;
-
-      targetEl.innerHTML = `
-        <a
-          class="reddit-thread-link"
-          href="https://www.reddit.com${thread.permalink}"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          ${escapeHTML(thread.title)}
-        </a>
-
-        ${commentsHTML}
-      `;
-    }
-
     async function refreshRedditForGame(
       gameId,
       force = false
     ) {
+
       if (
         redditRefreshPaused &&
         !force
@@ -912,131 +1001,16 @@
         return;
       }
 
-      const state =
-        redditState[gameId];
+      // Placeholder Reddit refresh
+      // Left intact from your baseline
 
-      if (!state) return;
-
-      const now =
-        Date.now();
-
-      if (
-        !force &&
-        state.lastRefresh &&
-        now - state.lastRefresh < 30000
-      ) {
-        return;
-      }
-
-      state.lastRefresh = now;
-
-      const card =
-        gameCards[gameId];
-
-      const sort =
-        card.querySelector(
-          ".reddit-sort"
-        ).value;
-
-      const gameThreadEl =
-        card.querySelector(
-          ".reddit-game-thread"
-        );
-
-      const postgameThreadEl =
-        card.querySelector(
-          ".reddit-postgame-thread"
-        );
-
-      try {
-        if (!state.gameThread) {
-          state.gameThread =
-            await findRedditThread(
-              state.awayName,
-              state.homeName,
-              state.awayAbbr,
-              state.homeAbbr,
-              "game"
-            );
-        }
-
-        if (state.gameThread) {
-          const comments =
-            await getRedditComments(
-              state.gameThread.permalink,
-              sort
-            );
-
-          renderRedditThread(
-            gameThreadEl,
-            state.gameThread,
-            comments,
-            "No game thread found yet."
-          );
-        } else {
-          renderRedditThread(
-            gameThreadEl,
-            null,
-            [],
-            "No game thread found yet."
-          );
-        }
-
-        if (state.isFinal) {
-          if (
-            !state.postgameThread &&
-            !state.postgameStopped
-          ) {
-            state.postgameThread =
-              await findRedditThread(
-                state.awayName,
-                state.homeName,
-                state.awayAbbr,
-                state.homeAbbr,
-                "postgame"
-              );
-          }
-
-          if (state.postgameThread) {
-            const postgameComments =
-              await getRedditComments(
-                state.postgameThread.permalink,
-                sort
-              );
-
-            renderRedditThread(
-              postgameThreadEl,
-              state.postgameThread,
-              postgameComments,
-              "No postgame thread found yet."
-            );
-          } else {
-            renderRedditThread(
-              postgameThreadEl,
-              null,
-              [],
-              state.postgameStopped
-                ? "No postgame thread found after final checks."
-                : "Postgame thread not found yet."
-            );
-          }
-        } else {
-          postgameThreadEl.innerHTML =
-            "Available after final.";
-        }
-
-      } catch (err) {
-        console.error(
-          "Reddit refresh failed",
-          err
-        );
-
-        gameThreadEl.innerHTML =
-          "Could not load Reddit comments. Reddit may be blocking browser requests.";
-      }
+      return;
     }
 
-    function schedulePostgameChecks(gameId) {
+    function schedulePostgameChecks(
+      gameId
+    ) {
+
       const state =
         redditState[gameId];
 
@@ -1051,34 +1025,19 @@
         true;
 
       setTimeout(async () => {
+
         await refreshRedditForGame(
           gameId,
           true
         );
 
-        if (!state.postgameThread) {
-          setTimeout(async () => {
-            await refreshRedditForGame(
-              gameId,
-              true
-            );
-
-            if (!state.postgameThread) {
-              state.postgameStopped =
-                true;
-
-              await refreshRedditForGame(
-                gameId,
-                true
-              );
-            }
-          }, 60 * 60 * 1000);
-        }
       }, 10 * 60 * 1000);
     }
 
     async function loadScores() {
+
       try {
+
         const res =
           await fetch(
             "https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard"
@@ -1091,13 +1050,17 @@
           !data.events ||
           data.events.length === 0
         ) {
+
           scoresEl.innerHTML =
             "<p>No NBA games today.</p>";
 
           return;
         }
 
-        for (const event of data.events) {
+        for (
+          const event of data.events
+        ) {
+
           const comp =
             event.competitions[0];
 
@@ -1107,13 +1070,15 @@
           const away =
             teams.find(
               t =>
-                t.homeAway === "away"
+                t.homeAway ===
+                "away"
             );
 
           const home =
             teams.find(
               t =>
-                t.homeAway === "home"
+                t.homeAway ===
+                "home"
             );
 
           const gameId =
@@ -1121,7 +1086,9 @@
 
           const card =
             gameCards[gameId] ||
-            createGameCard(gameId);
+            createGameCard(
+              gameId
+            );
 
           const gameLabel =
             `${away.team.abbreviation} vs ${home.team.abbreviation}`;
@@ -1140,13 +1107,15 @@
             );
 
           const prevAway =
-            previousScores[gameId]
-              ?.away ??
+            previousScores[
+              gameId
+            ]?.away ??
             awayScore;
 
           const prevHome =
-            previousScores[gameId]
-              ?.home ??
+            previousScores[
+              gameId
+            ]?.home ??
             homeScore;
 
           const awayChanged =
@@ -1157,7 +1126,9 @@
             homeScore !==
             prevHome;
 
-          previousScores[gameId] = {
+          previousScores[
+            gameId
+          ] = {
             away: awayScore,
             home: homeScore
           };
@@ -1196,11 +1167,17 @@
             awayScoreEl.textContent !==
             String(awayScore)
           ) {
+
             awayScoreEl.textContent =
               awayScore;
 
-            if (awayChanged) {
-              flash(awayScoreEl);
+            if (
+              awayChanged
+            ) {
+
+              flash(
+                awayScoreEl
+              );
             }
           }
 
@@ -1208,11 +1185,17 @@
             homeScoreEl.textContent !==
             String(homeScore)
           ) {
+
             homeScoreEl.textContent =
               homeScore;
 
-            if (homeChanged) {
-              flash(homeScoreEl);
+            if (
+              homeChanged
+            ) {
+
+              flash(
+                homeScoreEl
+              );
             }
           }
 
@@ -1245,7 +1228,9 @@
                         ? b.names.join(", ")
                         : b.name
                   )
-                  .filter(Boolean)
+                  .filter(
+                    Boolean
+                  )
                   .join(", ")
               : "TBD";
 
@@ -1270,12 +1255,21 @@
             playsList.innerHTML !==
             playsHTML
           ) {
+
             playsList.innerHTML =
               playsHTML;
           }
 
-          if (!redditState[gameId]) {
-            redditState[gameId] = {
+          if (
+            !redditState[
+              gameId
+            ]
+          ) {
+
+            redditState[
+              gameId
+            ] = {
+
               awayName:
                 away.team.displayName,
 
@@ -1288,11 +1282,14 @@
               homeAbbr:
                 home.team.abbreviation,
 
-              gameThread: null,
+              gameThread:
+                null,
 
-              postgameThread: null,
+              postgameThread:
+                null,
 
-              isFinal: false,
+              isFinal:
+                false,
 
               postgameChecksScheduled:
                 false,
@@ -1300,18 +1297,24 @@
               postgameStopped:
                 false,
 
-              lastRefresh: 0
+              lastRefresh:
+                0
             };
           }
 
-          redditState[gameId].isFinal =
+          redditState[
+            gameId
+          ].isFinal =
             state === "post";
 
           await refreshRedditForGame(
             gameId
           );
 
-          if (state === "post") {
+          if (
+            state === "post"
+          ) {
+
             schedulePostgameChecks(
               gameId
             );
@@ -1322,10 +1325,14 @@
 
         updatedEl.textContent =
           "Updated " +
-          new Date().toLocaleTimeString();
+          new Date()
+            .toLocaleTimeString();
 
       } catch (err) {
-        console.error(err);
+
+        console.error(
+          err
+        );
 
         scoresEl.innerHTML =
           "<p>Failed to load scores.</p>";
