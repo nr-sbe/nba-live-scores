@@ -6,15 +6,12 @@
   <title>NBA Live Scores</title>
 
   <style>
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
 
     :root {
       --score-column-width: 150px;
       --bg: #050505;
       --panel: #0d0d0f;
-      --panel-soft: #141416;
       --border: #242428;
       --text: #f5f5f5;
       --muted: #8a8a8f;
@@ -28,11 +25,11 @@
       min-height: 100vh;
       padding: 32px;
       background:
-        radial-gradient(circle at top left, rgba(255, 43, 43, 0.14), transparent 36%),
-        radial-gradient(circle at top right, rgba(34, 197, 94, 0.08), transparent 30%),
+        radial-gradient(circle at top left, rgba(255,43,43,0.14), transparent 36%),
+        radial-gradient(circle at top right, rgba(34,197,94,0.08), transparent 30%),
         var(--bg);
       color: var(--text);
-      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-family: Inter, system-ui, sans-serif;
     }
 
     .page {
@@ -75,7 +72,7 @@
     .controls {
       margin-bottom: 22px;
       padding: 16px;
-      background: rgba(13, 13, 15, 0.82);
+      background: rgba(13,13,15,0.82);
       border: 1px solid var(--border);
       border-radius: 22px;
       display: grid;
@@ -314,17 +311,17 @@
         transform: scale(1.9);
         color: var(--red);
         text-shadow:
-          0 0 12px rgba(255, 0, 0, 0.95),
-          0 0 28px rgba(255, 0, 0, 0.9),
-          0 0 48px rgba(255, 0, 0, 0.8);
+          0 0 12px rgba(255,0,0,0.95),
+          0 0 28px rgba(255,0,0,0.9),
+          0 0 48px rgba(255,0,0,0.8);
       }
 
       60% {
         transform: scale(1.45);
         color: #ff4d4d;
         text-shadow:
-          0 0 10px rgba(255, 0, 0, 0.8),
-          0 0 24px rgba(255, 0, 0, 0.7);
+          0 0 10px rgba(255,0,0,0.8),
+          0 0 24px rgba(255,0,0,0.7);
       }
 
       100% {
@@ -460,6 +457,13 @@
 
     .reddit-thread-link:hover {
       text-decoration: underline;
+    }
+
+    .reddit-fallback {
+      color: #aaa;
+      font-size: 13px;
+      line-height: 1.4;
+      margin-top: 8px;
     }
 
     .comment {
@@ -910,7 +914,17 @@
         `?q=${encodeURIComponent(query)}` +
         "&restrict_sr=1" +
         "&sort=new" +
-        "&limit=10"
+        "&t=day" +
+        "&limit=25"
+      );
+    }
+
+    function redditSearchPageUrl(query) {
+      return (
+        "https://www.reddit.com/r/nba/search/" +
+        `?q=${encodeURIComponent(query)}` +
+        "&restrict_sr=1" +
+        "&sort=new"
       );
     }
 
@@ -920,6 +934,30 @@
         `?sort=${encodeURIComponent(sort)}` +
         "&limit=8"
       );
+    }
+
+    function normalizeText(value) {
+      return String(value || "")
+        .toLowerCase()
+        .replace(/[^a-z0-9\s]/g, " ")
+        .replace(/\s+/g, " ")
+        .trim();
+    }
+
+    function getTeamTokens(displayName, abbr) {
+      const parts =
+        normalizeText(displayName)
+          .split(" ")
+          .filter(Boolean);
+
+      const nickname =
+        parts[parts.length - 1];
+
+      return [
+        normalizeText(displayName),
+        normalizeText(abbr),
+        nickname
+      ].filter(Boolean);
     }
 
     function buildThreadQueries(
@@ -934,12 +972,58 @@
           ? "Post Game Thread"
           : "Game Thread";
 
+      const awayNick =
+        getTeamTokens(awayName, awayAbbr).slice(-1)[0];
+
+      const homeNick =
+        getTeamTokens(homeName, homeAbbr).slice(-1)[0];
+
       return [
         `${label} ${awayName} ${homeName}`,
         `${label} ${awayAbbr} ${homeAbbr}`,
-        `${label} ${homeName} ${awayName}`,
-        `${label} ${homeAbbr} ${awayAbbr}`
+        `${label} ${awayNick} ${homeNick}`,
+        `${awayNick} ${homeNick} ${label}`,
+        `${awayAbbr} ${homeAbbr} ${label}`
       ];
+    }
+
+    function postMatchesTeams(postTitle, awayName, homeName, awayAbbr, homeAbbr) {
+      const title =
+        normalizeText(postTitle);
+
+      const awayTokens =
+        getTeamTokens(awayName, awayAbbr);
+
+      const homeTokens =
+        getTeamTokens(homeName, homeAbbr);
+
+      const hasAway =
+        awayTokens.some(token => title.includes(token));
+
+      const hasHome =
+        homeTokens.some(token => title.includes(token));
+
+      return hasAway && hasHome;
+    }
+
+    function postMatchesThreadType(postTitle, type) {
+      const title =
+        normalizeText(postTitle);
+
+      const isPostgame =
+        title.includes("post game") ||
+        title.includes("postgame") ||
+        title.includes("post game thread") ||
+        title.includes("postgame thread");
+
+      const isGameThread =
+        title.includes("game thread");
+
+      if (type === "postgame") {
+        return isPostgame;
+      }
+
+      return isGameThread && !isPostgame;
     }
 
     async function findRedditThread(
@@ -975,39 +1059,16 @@
 
           const match =
             posts.find(post => {
-              const title =
-                (
-                  post.title || ""
-                ).toLowerCase();
-
-              const wantsPostgame =
-                type === "postgame";
-
-              const hasCorrectType =
-                wantsPostgame
-                  ? (
-                      title.includes("post game thread") ||
-                      title.includes("post-game thread") ||
-                      title.includes("postgame thread")
-                    )
-                  : (
-                      title.includes("game thread") &&
-                      !title.includes("post game") &&
-                      !title.includes("post-game") &&
-                      !title.includes("postgame")
-                    );
-
-              const hasTeams =
-                (
-                  title.includes(awayName.toLowerCase()) ||
-                  title.includes(awayAbbr.toLowerCase())
-                ) &&
-                (
-                  title.includes(homeName.toLowerCase()) ||
-                  title.includes(homeAbbr.toLowerCase())
-                );
-
-              return hasCorrectType && hasTeams;
+              return (
+                postMatchesThreadType(post.title, type) &&
+                postMatchesTeams(
+                  post.title,
+                  awayName,
+                  homeName,
+                  awayAbbr,
+                  homeAbbr
+                )
+              );
             });
 
           if (match) {
@@ -1056,11 +1117,31 @@
       targetEl,
       thread,
       comments,
-      fallbackText
+      fallbackText,
+      fallbackSearchUrl
     ) {
       if (!thread) {
-        targetEl.innerHTML =
-          escapeHTML(fallbackText);
+        targetEl.innerHTML = `
+          <div class="reddit-fallback">
+            ${escapeHTML(fallbackText)}
+          </div>
+
+          ${
+            fallbackSearchUrl
+              ? `
+                <a
+                  class="reddit-thread-link"
+                  href="${fallbackSearchUrl}"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Open Reddit search
+                </a>
+              `
+              : ""
+          }
+        `;
+
         return;
       }
 
@@ -1147,6 +1228,28 @@
           ".reddit-postgame-thread"
         );
 
+      const gameFallbackUrl =
+        redditSearchPageUrl(
+          buildThreadQueries(
+            state.awayName,
+            state.homeName,
+            state.awayAbbr,
+            state.homeAbbr,
+            "game"
+          )[0]
+        );
+
+      const postgameFallbackUrl =
+        redditSearchPageUrl(
+          buildThreadQueries(
+            state.awayName,
+            state.homeName,
+            state.awayAbbr,
+            state.homeAbbr,
+            "postgame"
+          )[0]
+        );
+
       try {
         if (!state.gameThread) {
           state.gameThread =
@@ -1170,14 +1273,16 @@
             gameThreadEl,
             state.gameThread,
             comments,
-            "No game thread found yet."
+            "No game thread found yet.",
+            gameFallbackUrl
           );
         } else {
           renderRedditThread(
             gameThreadEl,
             null,
             [],
-            "No game thread found yet."
+            "No exact game thread found. Reddit may be blocking the lookup, or the thread title may use unusual wording.",
+            gameFallbackUrl
           );
         }
 
@@ -1207,7 +1312,8 @@
               postgameThreadEl,
               state.postgameThread,
               postgameComments,
-              "No postgame thread found yet."
+              "No postgame thread found yet.",
+              postgameFallbackUrl
             );
           } else {
             renderRedditThread(
@@ -1215,8 +1321,9 @@
               null,
               [],
               state.postgameStopped
-                ? "No postgame thread found after final checks."
-                : "Postgame thread not found yet."
+                ? "No exact postgame thread found after final checks."
+                : "No exact postgame thread found yet.",
+              postgameFallbackUrl
             );
           }
         } else {
@@ -1230,8 +1337,13 @@
           err
         );
 
-        gameThreadEl.innerHTML =
-          "Could not load Reddit comments. Reddit may be blocking browser requests.";
+        renderRedditThread(
+          gameThreadEl,
+          null,
+          [],
+          "Could not load Reddit directly. Use the search link instead.",
+          gameFallbackUrl
+        );
       }
     }
 
