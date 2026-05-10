@@ -81,10 +81,13 @@
       --border: #181818;
       --text: #d9d9d9;
       --muted: #707070;
-      --accent: #9a6cff;
-      --accent-soft: rgba(154, 108, 255, 0.13);
-      --secondary: #3ddc97;
-      --gold: #b89d5a;
+      --accent: #8b8b8b;
+      --accent-soft: rgba(139, 139, 139, 0.14);
+      --secondary: #6f7d6f;
+      --gold: #a9965e;
+      
+      --momentum-away: #8f7cff;
+      --momentum-home: #38c98b;
     }
 
     body[data-theme="lowlightgreen"] {
@@ -699,15 +702,15 @@
     .momentum-away {
       left: 0;
       background:
-        linear-gradient(90deg, rgba(255,255,255,0.12), transparent),
-        var(--accent);
+      linear-gradient(90deg, rgba(255,255,255,0.12), transparent),
+      var(--momentum-away, var(--accent));
     }
 
     .momentum-home {
       right: 0;
       background:
         linear-gradient(-90deg, rgba(255,255,255,0.12), transparent),
-        var(--secondary);
+        var(--momentum-home, var(--secondary));
     }
 
     .momentum-labels {
