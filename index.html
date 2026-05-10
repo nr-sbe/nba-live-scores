@@ -85,7 +85,7 @@
       --accent-soft: rgba(139, 139, 139, 0.14);
       --secondary: #6f7d6f;
       --gold: #a9965e;
-      
+
       --momentum-away: #b68a45;
       --momentum-home: #4f9f79;
     }
@@ -102,7 +102,7 @@
       --secondary: #3f7f56;
       --gold: #b59b5a;
 
-      --momentum-home: #1EA832
+      --momentum-home: #1EA832;
     }
 
     body[data-theme="amber"] {
@@ -117,7 +117,7 @@
       --secondary: #22c55e;
       --gold: #facc15;
     }
-    
+
     body {
       margin: 0;
       min-height: 100vh;
@@ -704,8 +704,8 @@
     .momentum-away {
       left: 0;
       background:
-      linear-gradient(90deg, rgba(255,255,255,0.12), transparent),
-      var(--momentum-away, var(--accent));
+        linear-gradient(90deg, rgba(255,255,255,0.12), transparent),
+        var(--momentum-away, var(--accent));
     }
 
     .momentum-home {
@@ -883,8 +883,8 @@
           Soft Black
           <span class="theme-swatches">
             <span class="swatch" style="background:#010101"></span>
-            <span class="swatch" style="background:#9a6cff"></span>
-            <span class="swatch" style="background:#3ddc97"></span>
+            <span class="swatch" style="background:#b68a45"></span>
+            <span class="swatch" style="background:#4f9f79"></span>
           </span>
         </button>
 
@@ -1026,6 +1026,7 @@
       );
 
     let redditRefreshPaused = false;
+    let currentScoreboardDate = null;
 
     function openSettings() {
       settingsPanel.classList.add("open");
@@ -1090,6 +1091,70 @@
       );
     });
 
+    function getEasternDateParts(date = new Date()) {
+      const parts =
+        new Intl.DateTimeFormat(
+          "en-US",
+          {
+            timeZone: "America/New_York",
+            year: "numeric",
+            month: "2-digit",
+            day: "2-digit",
+            hour: "2-digit",
+            hourCycle: "h23"
+          }
+        ).formatToParts(date);
+
+      const values = {};
+
+      parts.forEach(part => {
+        values[part.type] = part.value;
+      });
+
+      return {
+        year: Number(values.year),
+        month: Number(values.month),
+        day: Number(values.day),
+        hour: Number(values.hour)
+      };
+    }
+
+    function formatDateYYYYMMDD(year, month, day) {
+      return (
+        String(year) +
+        String(month).padStart(2, "0") +
+        String(day).padStart(2, "0")
+      );
+    }
+
+    function getNbaScoreboardDate() {
+      const eastern =
+        getEasternDateParts();
+
+      if (eastern.hour >= 3) {
+        return formatDateYYYYMMDD(
+          eastern.year,
+          eastern.month,
+          eastern.day
+        );
+      }
+
+      const previousDate =
+        new Date(
+          Date.UTC(
+            eastern.year,
+            eastern.month - 1,
+            eastern.day - 1
+          )
+        );
+
+      return formatDateYYYYMMDD(
+        previousDate.getUTCFullYear(),
+        previousDate.getUTCMonth() + 1,
+        previousDate.getUTCDate()
+      );
+    }
+
     function saveHiddenGames() {
       localStorage.setItem(
         "hiddenNbaGames",
@@ -1140,6 +1205,40 @@
         gameCards[gameId].classList.remove("hidden");
       }
 
+      updateHiddenGamesUI();
+    }
+
+    function removeStaleGameCards(activeGameIds) {
+      Object.keys(gameCards).forEach(gameId => {
+        if (!activeGameIds.has(gameId)) {
+          gameCards[gameId].remove();
+
+          delete gameCards[gameId];
+          delete previousScores[gameId];
+          delete redditState[gameId];
+          delete gameLabels[gameId];
+
+          hiddenGames.delete(gameId);
+        }
+      });
+
+      saveHiddenGames();
+      updateHiddenGamesUI();
+    }
+
+    function clearAllGameCards() {
+      Object.keys(gameCards).forEach(gameId => {
+        gameCards[gameId].remove();
+
+        delete gameCards[gameId];
+        delete previousScores[gameId];
+        delete redditState[gameId];
+        delete gameLabels[gameId];
+
+        hiddenGames.delete(gameId);
+      });
+
+      saveHiddenGames();
       updateHiddenGamesUI();
     }
 
@@ -2050,22 +2149,48 @@
 
     async function loadScores() {
       try {
+        const scoreboardDate =
+          getNbaScoreboardDate();
+
+        if (currentScoreboardDate !== scoreboardDate) {
+          currentScoreboardDate = scoreboardDate;
+          clearAllGameCards();
+        }
+
         const res =
           await fetch(
-            "https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard"
+            `https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard?dates=${scoreboardDate}`
           );
 
         const data =
           await res.json();
+
+        const activeGameIds =
+          new Set(
+            (data.events || []).map(event => event.id)
+          );
+
+        removeStaleGameCards(activeGameIds);
 
         if (
           !data.events ||
           data.events.length === 0
         ) {
           scoresEl.innerHTML =
-            "<p>No NBA games today.</p>";
+            `<p>No NBA games for ${scoreboardDate}.</p>`;
+
+          updatedEl.textContent =
+            "Updated " +
+            new Date()
+              .toLocaleTimeString();
 
           return;
+        }
+
+        if (
+          scoresEl.innerHTML.includes("No NBA games")
+        ) {
+          scoresEl.innerHTML = "";
         }
 
         for (const event of data.events) {
@@ -2314,7 +2439,8 @@
         updatedEl.textContent =
           "Updated " +
           new Date()
-            .toLocaleTimeString();
+            .toLocaleTimeString() +
+          ` · NBA date ${scoreboardDate}`;
 
       } catch (err) {
         console.error(err);
