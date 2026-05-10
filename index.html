@@ -88,6 +88,45 @@
       --gold: #facc15;
     }
 
+    body[data-theme="deepforest"] {
+      --bg: #010705;
+      --panel: #07110d;
+      --panel-soft: #0d1c16;
+      --border: #1d3329;
+      --text: #f0fdf4;
+      --muted: #8fb3a1;
+      --accent: #16a34a;
+      --accent-soft: rgba(22, 163, 74, 0.2);
+      --secondary: #34d399;
+      --gold: #facc15;
+    }
+
+    body[data-theme="emeraldnight"] {
+      --bg: #020906;
+      --panel: #08150f;
+      --panel-soft: #10231a;
+      --border: #214235;
+      --text: #ecfdf5;
+      --muted: #8eb7a3;
+      --accent: #10b981;
+      --accent-soft: rgba(16, 185, 129, 0.2);
+      --secondary: #22c55e;
+      --gold: #fde047;
+    }
+
+    body[data-theme="pine"] {
+      --bg: #030805;
+      --panel: #0b140e;
+      --panel-soft: #142119;
+      --border: #2b3e31;
+      --text: #f0fdf4;
+      --muted: #9db1a3;
+      --accent: #65a30d;
+      --accent-soft: rgba(101, 163, 13, 0.2);
+      --secondary: #22c55e;
+      --gold: #facc15;
+    }
+
     body {
       margin: 0;
       min-height: 100vh;
@@ -167,6 +206,7 @@
       box-shadow: 30px 0 80px rgba(0,0,0,0.5);
       transform: translateX(-100%);
       transition: transform 0.24s ease;
+      overflow-y: auto;
     }
 
     .settings-panel.open {
@@ -623,6 +663,84 @@
       margin-left: 6px;
     }
 
+    .momentum-section {
+      margin-top: 16px;
+      padding: 14px;
+      border-radius: 18px;
+      border: 1px solid #1f1f24;
+      background: rgba(255,255,255,0.025);
+    }
+
+    .momentum-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+
+    .momentum-title {
+      color: #777;
+      text-transform: uppercase;
+      font-size: 11px;
+      font-weight: 950;
+      letter-spacing: 1.1px;
+    }
+
+    .momentum-run {
+      color: var(--accent);
+      font-size: 12px;
+      font-weight: 900;
+      text-align: right;
+    }
+
+    .momentum-bar {
+      position: relative;
+      height: 12px;
+      background: #121214;
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .momentum-away,
+    .momentum-home {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      transition: width 0.35s ease;
+    }
+
+    .momentum-away {
+      left: 0;
+      background:
+        linear-gradient(
+          90deg,
+          rgba(255,255,255,0.12),
+          transparent
+        ),
+        var(--accent);
+    }
+
+    .momentum-home {
+      right: 0;
+      background:
+        linear-gradient(
+          -90deg,
+          rgba(255,255,255,0.12),
+          transparent
+        ),
+        var(--secondary);
+    }
+
+    .momentum-labels {
+      margin-top: 8px;
+      display: flex;
+      justify-content: space-between;
+      color: #888;
+      font-size: 11px;
+      font-weight: 800;
+    }
+
     .reddit-side {
       border-left: 1px solid #242428;
       padding-left: 20px;
@@ -814,6 +932,33 @@
           </span>
         </button>
 
+        <button class="theme-button" data-theme-option="deepforest" type="button">
+          Deep Forest
+          <span class="theme-swatches">
+            <span class="swatch" style="background:#010705"></span>
+            <span class="swatch" style="background:#16a34a"></span>
+            <span class="swatch" style="background:#34d399"></span>
+          </span>
+        </button>
+
+        <button class="theme-button" data-theme-option="emeraldnight" type="button">
+          Emerald Night
+          <span class="theme-swatches">
+            <span class="swatch" style="background:#020906"></span>
+            <span class="swatch" style="background:#10b981"></span>
+            <span class="swatch" style="background:#22c55e"></span>
+          </span>
+        </button>
+
+        <button class="theme-button" data-theme-option="pine" type="button">
+          Pine
+          <span class="theme-swatches">
+            <span class="swatch" style="background:#030805"></span>
+            <span class="swatch" style="background:#65a30d"></span>
+            <span class="swatch" style="background:#22c55e"></span>
+          </span>
+        </button>
+
         <button class="theme-button" data-theme-option="amber" type="button">
           Warm Amber
           <span class="theme-swatches">
@@ -831,7 +976,7 @@
       <div>
         <h1>NBA LIVE SCORES</h1>
         <div class="subtitle">
-          Live scoreboard, latest plays, broadcasts, and Reddit threads.
+          Live scoreboard, latest plays, broadcasts, momentum, and Reddit threads.
         </div>
       </div>
 
@@ -1094,6 +1239,40 @@
             <span class="label">Latest Plays</span>
             <div class="plays-list"></div>
           </div>
+
+          <div class="momentum-section">
+            <div class="momentum-header">
+              <div class="momentum-title">
+                Momentum
+              </div>
+
+              <div class="momentum-run momentum-run-text">
+                Even
+              </div>
+            </div>
+
+            <div class="momentum-bar">
+              <div
+                class="momentum-away"
+                style="width:50%"
+              ></div>
+
+              <div
+                class="momentum-home"
+                style="width:50%"
+              ></div>
+            </div>
+
+            <div class="momentum-labels">
+              <span class="momentum-away-label">
+                Away
+              </span>
+
+              <span class="momentum-home-label">
+                Home
+              </span>
+            </div>
+          </div>
         </div>
 
         <div class="reddit-side">
@@ -1250,6 +1429,126 @@
             Play-by-play unavailable
           </div>
         `;
+      }
+    }
+
+    async function updateMomentum(
+      gameId,
+      awayTeam,
+      homeTeam
+    ) {
+      try {
+        const res =
+          await fetch(
+            `https://site.api.espn.com/apis/site/v2/sports/basketball/nba/summary?event=${gameId}`
+          );
+
+        const data =
+          await res.json();
+
+        const plays =
+          data?.plays || [];
+
+        const recent =
+          plays
+            .filter(play =>
+              play.awayScore !== undefined &&
+              play.homeScore !== undefined
+            )
+            .slice(-12);
+
+        let awayDelta = 0;
+        let homeDelta = 0;
+
+        for (let i = 1; i < recent.length; i++) {
+          const prev =
+            recent[i - 1];
+
+          const curr =
+            recent[i];
+
+          const awayDiff =
+            Number(curr.awayScore || 0) -
+            Number(prev.awayScore || 0);
+
+          const homeDiff =
+            Number(curr.homeScore || 0) -
+            Number(prev.homeScore || 0);
+
+          awayDelta += Math.max(0, awayDiff);
+          homeDelta += Math.max(0, homeDiff);
+        }
+
+        const card =
+          gameCards[gameId];
+
+        if (!card) return;
+
+        const awayBar =
+          card.querySelector(".momentum-away");
+
+        const homeBar =
+          card.querySelector(".momentum-home");
+
+        const runText =
+          card.querySelector(".momentum-run-text");
+
+        const awayLabel =
+          card.querySelector(".momentum-away-label");
+
+        const homeLabel =
+          card.querySelector(".momentum-home-label");
+
+        awayLabel.textContent =
+          `${awayTeam} ${awayDelta}`;
+
+        homeLabel.textContent =
+          `${homeTeam} ${homeDelta}`;
+
+        if (recent.length < 2 || awayDelta + homeDelta === 0) {
+          awayBar.style.width = "50%";
+          homeBar.style.width = "50%";
+          runText.textContent = "Momentum even";
+          return;
+        }
+
+        const total =
+          awayDelta + homeDelta;
+
+        let awayPct =
+          (awayDelta / total) * 100;
+
+        let homePct =
+          (homeDelta / total) * 100;
+
+        awayPct =
+          Math.max(8, Math.min(92, awayPct));
+
+        homePct =
+          Math.max(8, Math.min(92, homePct));
+
+        awayBar.style.width =
+          `${awayPct}%`;
+
+        homeBar.style.width =
+          `${homePct}%`;
+
+        if (awayDelta > homeDelta) {
+          runText.textContent =
+            `${awayTeam} +${awayDelta - homeDelta} recent edge`;
+        } else if (homeDelta > awayDelta) {
+          runText.textContent =
+            `${homeTeam} +${homeDelta - awayDelta} recent edge`;
+        } else {
+          runText.textContent =
+            "Momentum even";
+        }
+
+      } catch (err) {
+        console.error(
+          "Momentum update failed",
+          err
+        );
       }
     }
 
@@ -1945,6 +2244,12 @@
             playsList.innerHTML =
               playsHTML;
           }
+
+          await updateMomentum(
+            gameId,
+            away.team.abbreviation,
+            home.team.abbreviation
+          );
 
           if (!redditState[gameId]) {
             redditState[gameId] = {
