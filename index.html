@@ -10,14 +10,82 @@
 
     :root {
       --score-column-width: 150px;
+
       --bg: #050505;
       --panel: #0d0d0f;
+      --panel-soft: #141416;
       --border: #242428;
       --text: #f5f5f5;
       --muted: #8a8a8f;
-      --red: #ff2b2b;
-      --green: #22c55e;
+      --accent: #ff2b2b;
+      --accent-soft: rgba(255, 43, 43, 0.16);
+      --secondary: #22c55e;
       --gold: #f5c542;
+    }
+
+    body[data-theme="blackout"] {
+      --bg: #000;
+      --panel: #080808;
+      --panel-soft: #111;
+      --border: #202020;
+      --text: #f7f7f7;
+      --muted: #777;
+      --accent: #ff2b2b;
+      --accent-soft: rgba(255, 43, 43, 0.16);
+      --secondary: #22c55e;
+      --gold: #f5c542;
+    }
+
+    body[data-theme="midnight"] {
+      --bg: #030712;
+      --panel: #0b1020;
+      --panel-soft: #111827;
+      --border: #243044;
+      --text: #f8fafc;
+      --muted: #94a3b8;
+      --accent: #38bdf8;
+      --accent-soft: rgba(56, 189, 248, 0.18);
+      --secondary: #22c55e;
+      --gold: #facc15;
+    }
+
+    body[data-theme="purple"] {
+      --bg: #090512;
+      --panel: #120b22;
+      --panel-soft: #1b1133;
+      --border: #33204f;
+      --text: #faf5ff;
+      --muted: #b9a8ce;
+      --accent: #a855f7;
+      --accent-soft: rgba(168, 85, 247, 0.2);
+      --secondary: #34d399;
+      --gold: #fbbf24;
+    }
+
+    body[data-theme="forest"] {
+      --bg: #020806;
+      --panel: #07110d;
+      --panel-soft: #0d1c16;
+      --border: #1d3329;
+      --text: #f0fdf4;
+      --muted: #8fb3a1;
+      --accent: #22c55e;
+      --accent-soft: rgba(34, 197, 94, 0.18);
+      --secondary: #38bdf8;
+      --gold: #eab308;
+    }
+
+    body[data-theme="amber"] {
+      --bg: #0a0601;
+      --panel: #120d05;
+      --panel-soft: #1f1608;
+      --border: #3a2b12;
+      --text: #fff7ed;
+      --muted: #bca98d;
+      --accent: #f97316;
+      --accent-soft: rgba(249, 115, 22, 0.2);
+      --secondary: #22c55e;
+      --gold: #facc15;
     }
 
     body {
@@ -25,16 +93,154 @@
       min-height: 100vh;
       padding: 32px;
       background:
-        radial-gradient(circle at top left, rgba(255,43,43,0.14), transparent 36%),
+        radial-gradient(circle at top left, var(--accent-soft), transparent 36%),
         radial-gradient(circle at top right, rgba(34,197,94,0.08), transparent 30%),
         var(--bg);
       color: var(--text);
       font-family: Inter, system-ui, sans-serif;
+      transition: background 0.25s ease, color 0.25s ease;
     }
 
     .page {
       max-width: 1240px;
       margin: 0 auto;
+    }
+
+    .hamburger-button {
+      position: fixed;
+      top: 18px;
+      left: 18px;
+      z-index: 1001;
+      width: 44px;
+      height: 44px;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      background: rgba(13, 13, 15, 0.86);
+      color: var(--text);
+      cursor: pointer;
+      display: grid;
+      place-items: center;
+      box-shadow: 0 18px 40px rgba(0,0,0,0.45);
+      backdrop-filter: blur(12px);
+    }
+
+    .hamburger-lines {
+      width: 18px;
+      display: grid;
+      gap: 4px;
+    }
+
+    .hamburger-lines span {
+      display: block;
+      height: 2px;
+      background: var(--text);
+      border-radius: 999px;
+    }
+
+    .settings-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 999;
+      background: rgba(0,0,0,0.55);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+    }
+
+    .settings-overlay.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .settings-panel {
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: 1000;
+      width: min(360px, 88vw);
+      height: 100vh;
+      padding: 86px 22px 22px;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.04), transparent 22%),
+        var(--panel);
+      border-right: 1px solid var(--border);
+      box-shadow: 30px 0 80px rgba(0,0,0,0.5);
+      transform: translateX(-100%);
+      transition: transform 0.24s ease;
+    }
+
+    .settings-panel.open {
+      transform: translateX(0);
+    }
+
+    .settings-title {
+      font-size: 24px;
+      font-weight: 950;
+      letter-spacing: -0.8px;
+      margin-bottom: 6px;
+    }
+
+    .settings-subtitle {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.4;
+      margin-bottom: 22px;
+    }
+
+    .setting-group {
+      padding: 16px;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      background: rgba(255,255,255,0.025);
+      margin-bottom: 14px;
+    }
+
+    .setting-label {
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 950;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+
+    .theme-grid {
+      display: grid;
+      gap: 10px;
+    }
+
+    .theme-button {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      width: 100%;
+      padding: 12px;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      background: var(--panel-soft);
+      color: var(--text);
+      cursor: pointer;
+      font-weight: 800;
+      transition: 0.15s ease;
+    }
+
+    .theme-button:hover,
+    .theme-button.active {
+      border-color: var(--accent);
+      transform: translateY(-1px);
+    }
+
+    .theme-swatches {
+      display: flex;
+      gap: 5px;
+    }
+
+    .swatch {
+      width: 14px;
+      height: 14px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.18);
     }
 
     .hero {
@@ -43,6 +249,7 @@
       align-items: flex-end;
       gap: 20px;
       margin-bottom: 24px;
+      padding-left: 42px;
     }
 
     h1 {
@@ -101,7 +308,7 @@
 
     input[type="range"] {
       width: 100%;
-      accent-color: var(--red);
+      accent-color: var(--accent);
     }
 
     select {
@@ -110,7 +317,7 @@
       border: 1px solid #33333a;
       border-radius: 10px;
       padding: 8px 10px;
-      accent-color: var(--red);
+      accent-color: var(--accent);
     }
 
     .reddit-toggle {
@@ -125,7 +332,7 @@
     .reddit-toggle input {
       width: 18px;
       height: 18px;
-      accent-color: var(--red);
+      accent-color: var(--accent);
     }
 
     .reddit-status {
@@ -182,7 +389,7 @@
     .hidden-game-button:hover,
     .hide-game-button:hover,
     .spoiler-toggle-button:hover {
-      border-color: var(--red);
+      border-color: var(--accent);
       color: white;
       transform: translateY(-1px);
     }
@@ -215,7 +422,7 @@
       inset: 0;
       border-radius: 28px;
       pointer-events: none;
-      background: linear-gradient(90deg, rgba(255,43,43,0.16), transparent 28%);
+      background: linear-gradient(90deg, var(--accent-soft), transparent 28%);
       opacity: 0.55;
     }
 
@@ -309,19 +516,19 @@
 
       20% {
         transform: scale(1.9);
-        color: var(--red);
+        color: var(--accent);
         text-shadow:
-          0 0 12px rgba(255,0,0,0.95),
-          0 0 28px rgba(255,0,0,0.9),
-          0 0 48px rgba(255,0,0,0.8);
+          0 0 12px var(--accent),
+          0 0 28px var(--accent),
+          0 0 48px var(--accent);
       }
 
       60% {
         transform: scale(1.45);
-        color: #ff4d4d;
+        color: var(--accent);
         text-shadow:
-          0 0 10px rgba(255,0,0,0.8),
-          0 0 24px rgba(255,0,0,0.7);
+          0 0 10px var(--accent),
+          0 0 24px var(--accent);
       }
 
       100% {
@@ -362,7 +569,7 @@
     }
 
     .live {
-      color: var(--green);
+      color: var(--secondary);
       border-color: rgba(34,197,94,0.35);
       background: rgba(34,197,94,0.08);
     }
@@ -411,7 +618,7 @@
     }
 
     .score-change {
-      color: var(--green);
+      color: var(--secondary);
       font-weight: 900;
       margin-left: 6px;
     }
@@ -449,7 +656,7 @@
     .reddit-thread-link {
       display: inline-block;
       margin: 6px 0 10px;
-      color: #ff7777;
+      color: var(--accent);
       font-size: 13px;
       font-weight: 800;
       text-decoration: none;
@@ -503,6 +710,7 @@
       .hero {
         align-items: flex-start;
         flex-direction: column;
+        padding-left: 54px;
       }
 
       .game {
@@ -532,7 +740,92 @@
   </style>
 </head>
 
-<body>
+<body data-theme="blackout">
+
+  <button
+    class="hamburger-button"
+    id="openSettings"
+    type="button"
+    aria-label="Open settings"
+  >
+    <span class="hamburger-lines">
+      <span></span>
+      <span></span>
+      <span></span>
+    </span>
+  </button>
+
+  <div
+    class="settings-overlay"
+    id="settingsOverlay"
+  ></div>
+
+  <aside
+    class="settings-panel"
+    id="settingsPanel"
+  >
+    <div class="settings-title">
+      Settings
+    </div>
+
+    <div class="settings-subtitle">
+      Customize the dashboard with different night-mode color schemes.
+    </div>
+
+    <div class="setting-group">
+      <div class="setting-label">
+        Night Mode Theme
+      </div>
+
+      <div class="theme-grid">
+        <button class="theme-button" data-theme-option="blackout" type="button">
+          Blackout
+          <span class="theme-swatches">
+            <span class="swatch" style="background:#000"></span>
+            <span class="swatch" style="background:#ff2b2b"></span>
+            <span class="swatch" style="background:#22c55e"></span>
+          </span>
+        </button>
+
+        <button class="theme-button" data-theme-option="midnight" type="button">
+          Midnight Blue
+          <span class="theme-swatches">
+            <span class="swatch" style="background:#030712"></span>
+            <span class="swatch" style="background:#38bdf8"></span>
+            <span class="swatch" style="background:#22c55e"></span>
+          </span>
+        </button>
+
+        <button class="theme-button" data-theme-option="purple" type="button">
+          Courtside Purple
+          <span class="theme-swatches">
+            <span class="swatch" style="background:#090512"></span>
+            <span class="swatch" style="background:#a855f7"></span>
+            <span class="swatch" style="background:#34d399"></span>
+          </span>
+        </button>
+
+        <button class="theme-button" data-theme-option="forest" type="button">
+          Forest Night
+          <span class="theme-swatches">
+            <span class="swatch" style="background:#020806"></span>
+            <span class="swatch" style="background:#22c55e"></span>
+            <span class="swatch" style="background:#38bdf8"></span>
+          </span>
+        </button>
+
+        <button class="theme-button" data-theme-option="amber" type="button">
+          Warm Amber
+          <span class="theme-swatches">
+            <span class="swatch" style="background:#0a0601"></span>
+            <span class="swatch" style="background:#f97316"></span>
+            <span class="swatch" style="background:#facc15"></span>
+          </span>
+        </button>
+      </div>
+    </div>
+  </aside>
+
   <div class="page">
     <div class="hero">
       <div>
@@ -597,6 +890,11 @@
     const hiddenGamesEl = document.getElementById("hiddenGames");
     const hiddenGamesListEl = document.getElementById("hiddenGamesList");
 
+    const openSettingsButton = document.getElementById("openSettings");
+    const settingsPanel = document.getElementById("settingsPanel");
+    const settingsOverlay = document.getElementById("settingsOverlay");
+    const themeButtons = document.querySelectorAll("[data-theme-option]");
+
     const previousScores = {};
     const gameCards = {};
     const redditState = {};
@@ -610,6 +908,53 @@
       );
 
     let redditRefreshPaused = false;
+
+    function openSettings() {
+      settingsPanel.classList.add("open");
+      settingsOverlay.classList.add("open");
+    }
+
+    function closeSettings() {
+      settingsPanel.classList.remove("open");
+      settingsOverlay.classList.remove("open");
+    }
+
+    openSettingsButton.addEventListener("click", openSettings);
+    settingsOverlay.addEventListener("click", closeSettings);
+
+    document.addEventListener("keydown", event => {
+      if (event.key === "Escape") {
+        closeSettings();
+      }
+    });
+
+    function setTheme(themeName) {
+      document.body.dataset.theme = themeName;
+
+      localStorage.setItem(
+        "nbaDashboardTheme",
+        themeName
+      );
+
+      themeButtons.forEach(button => {
+        button.classList.toggle(
+          "active",
+          button.dataset.themeOption === themeName
+        );
+      });
+    }
+
+    const savedTheme =
+      localStorage.getItem("nbaDashboardTheme") ||
+      "blackout";
+
+    setTheme(savedTheme);
+
+    themeButtons.forEach(button => {
+      button.addEventListener("click", () => {
+        setTheme(button.dataset.themeOption);
+      });
+    });
 
     pauseRedditRefreshEl.addEventListener("change", () => {
       redditRefreshPaused = pauseRedditRefreshEl.checked;
@@ -987,7 +1332,13 @@
       ];
     }
 
-    function postMatchesTeams(postTitle, awayName, homeName, awayAbbr, homeAbbr) {
+    function postMatchesTeams(
+      postTitle,
+      awayName,
+      homeName,
+      awayAbbr,
+      homeAbbr
+    ) {
       const title =
         normalizeText(postTitle);
 
