@@ -1854,35 +1854,7 @@
         : null;
     }
 
-    async function getRedditComments(permalink, sort) {
-      const res =
-        await fetch(
-          redditCommentsUrl(
-            permalink,
-            sort
-          )
-        );
-
-      const data =
-        await res.json();
-
-      const comments =
-        data?.[1]?.data?.children
-          ?.filter(
-            item => item.kind === "t1"
-          )
-          ?.map(
-            item => item.data
-          )
-          ?.filter(
-            comment =>
-              comment.body &&
-              comment.body !== "[deleted]"
-          )
-          ?.slice(0, 6) || [];
-
-      return comments;
-    }
+    async function fetchRedditPosts(url
 
     function renderRedditThread(
       targetEl,
