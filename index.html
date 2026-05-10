@@ -10,7 +10,6 @@
 
     :root {
       --score-column-width: 150px;
-
       --bg: #050505;
       --panel: #0d0d0f;
       --panel-soft: #141416;
@@ -75,19 +74,6 @@
       --gold: #eab308;
     }
 
-    body[data-theme="amber"] {
-      --bg: #0a0601;
-      --panel: #120d05;
-      --panel-soft: #1f1608;
-      --border: #3a2b12;
-      --text: #fff7ed;
-      --muted: #bca98d;
-      --accent: #f97316;
-      --accent-soft: rgba(249, 115, 22, 0.2);
-      --secondary: #22c55e;
-      --gold: #facc15;
-    }
-
     body[data-theme="softblack"] {
       --bg: #010101;
       --panel: #070707;
@@ -112,6 +98,19 @@
       --accent-soft: rgba(45, 95, 63, 0.24);
       --secondary: #3f7f56;
       --gold: #b59b5a;
+    }
+
+    body[data-theme="amber"] {
+      --bg: #0a0601;
+      --panel: #120d05;
+      --panel-soft: #1f1608;
+      --border: #3a2b12;
+      --text: #fff7ed;
+      --muted: #bca98d;
+      --accent: #f97316;
+      --accent-soft: rgba(249, 115, 22, 0.2);
+      --secondary: #22c55e;
+      --gold: #facc15;
     }
 
     body {
@@ -367,6 +366,60 @@
       font-size: 12px;
     }
 
+    #hiddenGames {
+      margin-bottom: 18px;
+      display: none;
+      padding: 14px;
+      background: rgba(13,13,15,0.82);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+    }
+
+    #hiddenGames.active {
+      display: block;
+    }
+
+    .hidden-title {
+      color: var(--muted);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 10px;
+      font-weight: 800;
+    }
+
+    .hidden-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    button {
+      font-family: inherit;
+    }
+
+    .hidden-game-button,
+    .hide-game-button,
+    .spoiler-toggle-button {
+      background: #111114;
+      color: #ddd;
+      border: 1px solid #33333a;
+      border-radius: 999px;
+      padding: 8px 12px;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 750;
+      transition: 0.15s ease;
+    }
+
+    .hidden-game-button:hover,
+    .hide-game-button:hover,
+    .spoiler-toggle-button:hover {
+      border-color: var(--accent);
+      color: white;
+      transform: translateY(-1px);
+    }
+
     #scores {
       display: grid;
       gap: 18px;
@@ -399,6 +452,10 @@
       opacity: 0.55;
     }
 
+    .game.hidden {
+      display: none;
+    }
+
     .main-side,
     .reddit-side {
       position: relative;
@@ -414,23 +471,21 @@
       gap: 8px;
     }
 
-    .hide-game-button,
-    .spoiler-toggle-button {
-      background: #111114;
-      color: #ddd;
-      border: 1px solid #33333a;
-      border-radius: 999px;
-      padding: 8px 12px;
-      cursor: pointer;
-      font-size: 12px;
-      font-weight: 750;
-      transition: 0.15s ease;
+    .game.spoiler-hidden .score {
+      color: transparent !important;
+      text-shadow: none !important;
+      background: #1b1b1f;
+      border-radius: 12px;
+      min-width: 58px;
     }
 
-    .hide-game-button:hover,
-    .spoiler-toggle-button:hover {
-      border-color: var(--accent);
-      color: white;
+    .game.spoiler-hidden .score.flash {
+      animation: none !important;
+    }
+
+    .game.spoiler-hidden .score::after {
+      content: "••";
+      color: #6f6f76;
     }
 
     .scoreboard {
@@ -519,6 +574,9 @@
       font-size: 24px;
       font-weight: 850;
       letter-spacing: -0.5px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .status {
@@ -543,7 +601,8 @@
     }
 
     .broadcast,
-    .plays {
+    .plays,
+    .reddit-panel {
       margin-top: 14px;
       color: #c8c8ce;
       font-size: 14px;
@@ -573,6 +632,7 @@
 
     .play:last-child {
       border-bottom: none;
+      padding-bottom: 0;
     }
 
     .play-time {
@@ -639,22 +699,14 @@
     .momentum-away {
       left: 0;
       background:
-        linear-gradient(
-          90deg,
-          rgba(255,255,255,0.12),
-          transparent
-        ),
+        linear-gradient(90deg, rgba(255,255,255,0.12), transparent),
         var(--accent);
     }
 
     .momentum-home {
       right: 0;
       background:
-        linear-gradient(
-          -90deg,
-          rgba(255,255,255,0.12),
-          transparent
-        ),
+        linear-gradient(-90deg, rgba(255,255,255,0.12), transparent),
         var(--secondary);
     }
 
@@ -665,6 +717,85 @@
       color: #888;
       font-size: 11px;
       font-weight: 800;
+    }
+
+    .reddit-side {
+      border-left: 1px solid #242428;
+      padding-left: 20px;
+      min-width: 0;
+    }
+
+    .reddit-panel {
+      background: rgba(255,255,255,0.025);
+      border: 1px solid #1f1f24;
+      border-radius: 20px;
+      padding: 16px;
+      margin-top: 0;
+    }
+
+    .reddit-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .reddit-title {
+      color: #fff;
+      font-size: 14px;
+      font-weight: 950;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .reddit-thread-link {
+      display: inline-block;
+      margin: 6px 0 10px;
+      color: var(--accent);
+      font-size: 13px;
+      font-weight: 800;
+      text-decoration: none;
+    }
+
+    .reddit-thread-link:hover {
+      text-decoration: underline;
+    }
+
+    .reddit-fallback {
+      color: #aaa;
+      font-size: 13px;
+      line-height: 1.4;
+      margin-top: 8px;
+    }
+
+    .comment {
+      padding: 11px 0;
+      border-bottom: 1px solid #1b1b1f;
+    }
+
+    .comment:last-child {
+      border-bottom: none;
+    }
+
+    .comment-meta {
+      color: #818188;
+      font-size: 12px;
+      margin-bottom: 5px;
+      font-weight: 750;
+    }
+
+    .comment-body {
+      color: #ddd;
+      font-size: 13px;
+      line-height: 1.45;
+      white-space: pre-wrap;
+    }
+
+    .postgame {
+      margin-top: 18px;
+      padding-top: 16px;
+      border-top: 1px solid #29292e;
     }
 
     @media (max-width: 950px) {
@@ -682,6 +813,13 @@
         grid-template-columns: 1fr;
       }
 
+      .reddit-side {
+        border-left: none;
+        border-top: 1px solid #242428;
+        padding-left: 0;
+        padding-top: 18px;
+      }
+
       .scoreboard {
         padding-right: 0;
       }
@@ -689,6 +827,10 @@
       .card-actions {
         position: static;
         margin-bottom: 14px;
+      }
+
+      .team-name {
+        white-space: normal;
       }
     }
   </style>
@@ -700,6 +842,7 @@
     class="hamburger-button"
     id="openSettings"
     type="button"
+    aria-label="Open settings"
   >
     <span class="hamburger-lines">
       <span></span>
@@ -731,7 +874,6 @@
       </div>
 
       <div class="theme-grid">
-
         <button class="theme-button" data-theme-option="softblack" type="button">
           Soft Black
           <span class="theme-swatches">
@@ -794,7 +936,6 @@
             <span class="swatch" style="background:#facc15"></span>
           </span>
         </button>
-
       </div>
     </div>
   </aside>
@@ -803,22 +944,17 @@
     <div class="hero">
       <div>
         <h1>NBA LIVE SCORES</h1>
-
         <div class="subtitle">
           Live scoreboard, latest plays, broadcasts, momentum, and Reddit threads.
         </div>
       </div>
 
-      <div id="updated">
-        Loading...
-      </div>
+      <div id="updated">Loading...</div>
     </div>
 
     <div class="controls">
       <div class="control-row">
-        <label for="scoreSpacing">
-          Score spacing
-        </label>
+        <label for="scoreSpacing">Score spacing</label>
 
         <input
           id="scoreSpacing"
@@ -845,44 +981,712 @@
       </div>
     </div>
 
+    <div id="hiddenGames">
+      <div class="hidden-title">
+        Hidden games — click to unhide
+      </div>
+
+      <div
+        class="hidden-list"
+        id="hiddenGamesList"
+      ></div>
+    </div>
+
     <div id="scores"></div>
   </div>
 
   <script>
-    // KEEP ALL YOUR EXISTING JAVASCRIPT BELOW THIS POINT
-    // No logic changes needed except the Reddit matcher update below.
+    const scoresEl = document.getElementById("scores");
+    const updatedEl = document.getElementById("updated");
+    const scoreSpacingEl = document.getElementById("scoreSpacing");
+    const pauseRedditRefreshEl = document.getElementById("pauseRedditRefresh");
+    const redditStatusEl = document.getElementById("redditStatus");
+    const hiddenGamesEl = document.getElementById("hiddenGames");
+    const hiddenGamesListEl = document.getElementById("hiddenGamesList");
+    const openSettingsButton = document.getElementById("openSettings");
+    const settingsPanel = document.getElementById("settingsPanel");
+    const settingsOverlay = document.getElementById("settingsOverlay");
+    const themeButtons = document.querySelectorAll("[data-theme-option]");
 
-    function postMatchesThreadType(postTitle, type, flairText = "") {
+    const previousScores = {};
+    const gameCards = {};
+    const redditState = {};
+    const gameLabels = {};
 
-      const title =
-        normalizeText(postTitle);
+    const hiddenGames =
+      new Set(
+        JSON.parse(
+          localStorage.getItem("hiddenNbaGames") || "[]"
+        )
+      );
 
-      const flair =
-        normalizeText(flairText);
+    let redditRefreshPaused = false;
 
-      const hasGameFlair =
-        flair.includes("game");
+    function openSettings() {
+      settingsPanel.classList.add("open");
+      settingsOverlay.classList.add("open");
+    }
 
-      const hasPostFlair =
-        flair.includes("post");
+    function closeSettings() {
+      settingsPanel.classList.remove("open");
+      settingsOverlay.classList.remove("open");
+    }
 
-      const isPostgame =
-        title.startsWith("post game thread") ||
-        title.startsWith("postgame thread") ||
-        title.includes("post game");
+    openSettingsButton.addEventListener("click", openSettings);
+    settingsOverlay.addEventListener("click", closeSettings);
 
-      const isGameThread =
-        title.startsWith("game thread") ||
-        title.includes("game thread");
+    document.addEventListener("keydown", event => {
+      if (event.key === "Escape") {
+        closeSettings();
+      }
+    });
 
-      if (type === "postgame") {
-        return isPostgame || hasPostFlair;
+    function setTheme(themeName) {
+      document.body.dataset.theme = themeName;
+
+      localStorage.setItem(
+        "nbaDashboardTheme",
+        themeName
+      );
+
+      themeButtons.forEach(button => {
+        button.classList.toggle(
+          "active",
+          button.dataset.themeOption === themeName
+        );
+      });
+    }
+
+    const savedTheme =
+      localStorage.getItem("nbaDashboardTheme") ||
+      "softblack";
+
+    setTheme(savedTheme);
+
+    themeButtons.forEach(button => {
+      button.addEventListener("click", () => {
+        setTheme(button.dataset.themeOption);
+      });
+    });
+
+    pauseRedditRefreshEl.addEventListener("change", () => {
+      redditRefreshPaused = pauseRedditRefreshEl.checked;
+
+      redditStatusEl.textContent =
+        redditRefreshPaused
+          ? "Reddit auto-refresh paused"
+          : "Reddit auto-refresh active";
+    });
+
+    scoreSpacingEl.addEventListener("input", () => {
+      document.documentElement.style.setProperty(
+        "--score-column-width",
+        `${scoreSpacingEl.value}px`
+      );
+    });
+
+    function saveHiddenGames() {
+      localStorage.setItem(
+        "hiddenNbaGames",
+        JSON.stringify([...hiddenGames])
+      );
+    }
+
+    function updateHiddenGamesUI() {
+      hiddenGamesListEl.innerHTML = "";
+
+      if (hiddenGames.size === 0) {
+        hiddenGamesEl.classList.remove("active");
+        return;
       }
 
+      hiddenGamesEl.classList.add("active");
+
+      [...hiddenGames].forEach(gameId => {
+        const button = document.createElement("button");
+
+        button.className = "hidden-game-button";
+        button.textContent = gameLabels[gameId] || `Game ${gameId}`;
+
+        button.addEventListener("click", () => {
+          unhideGame(gameId);
+        });
+
+        hiddenGamesListEl.appendChild(button);
+      });
+    }
+
+    function hideGame(gameId) {
+      hiddenGames.add(gameId);
+      saveHiddenGames();
+
+      if (gameCards[gameId]) {
+        gameCards[gameId].classList.add("hidden");
+      }
+
+      updateHiddenGamesUI();
+    }
+
+    function unhideGame(gameId) {
+      hiddenGames.delete(gameId);
+      saveHiddenGames();
+
+      if (gameCards[gameId]) {
+        gameCards[gameId].classList.remove("hidden");
+      }
+
+      updateHiddenGamesUI();
+    }
+
+    function flash(el) {
+      el.classList.remove("flash");
+      void el.offsetWidth;
+      el.classList.add("flash");
+    }
+
+    function escapeHTML(value) {
+      return String(value || "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    function createGameCard(gameId) {
+      const card = document.createElement("div");
+
+      card.className = "game";
+      card.id = `game-${gameId}`;
+
+      card.innerHTML = `
+        <div class="card-actions">
+          <button
+            class="spoiler-toggle-button"
+            type="button"
+          >
+            Hide scores
+          </button>
+
+          <button
+            class="hide-game-button"
+            type="button"
+          >
+            Hide game
+          </button>
+        </div>
+
+        <div class="main-side">
+          <div class="scoreboard">
+            <div class="scores-left">
+              <div class="score-row">
+                <div class="score-label away-abbr"></div>
+                <div class="score away-score">0</div>
+              </div>
+
+              <div class="score-row">
+                <div class="score-label home-abbr"></div>
+                <div class="score home-score">0</div>
+              </div>
+            </div>
+
+            <div class="teams-right">
+              <div class="team-name away-name"></div>
+              <div class="team-name home-name"></div>
+            </div>
+          </div>
+
+          <div class="status"></div>
+
+          <div class="broadcast">
+            <span class="label">Broadcast</span>
+            <span class="broadcast-text">TBD</span>
+          </div>
+
+          <div class="plays">
+            <span class="label">Latest Plays</span>
+            <div class="plays-list"></div>
+          </div>
+
+          <div class="momentum-section">
+            <div class="momentum-header">
+              <div class="momentum-title">
+                Momentum
+              </div>
+
+              <div class="momentum-run momentum-run-text">
+                Even
+              </div>
+            </div>
+
+            <div class="momentum-bar">
+              <div
+                class="momentum-away"
+                style="width:50%"
+              ></div>
+
+              <div
+                class="momentum-home"
+                style="width:50%"
+              ></div>
+            </div>
+
+            <div class="momentum-labels">
+              <span class="momentum-away-label">
+                Away
+              </span>
+
+              <span class="momentum-home-label">
+                Home
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div class="reddit-side">
+          <div class="reddit-panel">
+            <div class="reddit-header">
+              <div class="reddit-title">Game Thread</div>
+
+              <select class="reddit-sort">
+                <option value="new">Newest</option>
+                <option value="top">Most upvoted</option>
+              </select>
+            </div>
+
+            <div class="reddit-game-thread">
+              Looking for Reddit game thread...
+            </div>
+
+            <div class="postgame">
+              <div class="reddit-title">Postgame Thread</div>
+              <div class="reddit-postgame-thread">
+                Available after final.
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+
+      card
+        .querySelector(".reddit-sort")
+        .addEventListener("change", () => {
+          refreshRedditForGame(gameId, true);
+        });
+
+      card
+        .querySelector(".hide-game-button")
+        .addEventListener("click", event => {
+          event.stopPropagation();
+          hideGame(gameId);
+        });
+
+      const spoilerButton =
+        card.querySelector(".spoiler-toggle-button");
+
+      spoilerButton.addEventListener("click", event => {
+        event.stopPropagation();
+
+        const hidden =
+          card.classList.toggle("spoiler-hidden");
+
+        spoilerButton.textContent =
+          hidden
+            ? "Show scores"
+            : "Hide scores";
+      });
+
+      if (hiddenGames.has(gameId)) {
+        card.classList.add("hidden");
+      }
+
+      scoresEl.appendChild(card);
+      gameCards[gameId] = card;
+
+      return card;
+    }
+
+    function getPlayTimestamp(play) {
+      const period =
+        play.period?.number ||
+        play.period ||
+        "";
+
+      const clock =
+        play.clock?.displayValue ||
+        play.displayClock ||
+        play.clock ||
+        "";
+
+      if (period && clock) {
+        return `Q${period} ${clock}`;
+      }
+
+      if (clock) {
+        return clock;
+      }
+
+      return "Time unavailable";
+    }
+
+    async function getLatestPlays(
+      gameId,
+      awayAbbr,
+      homeAbbr
+    ) {
+      try {
+        const res =
+          await fetch(
+            `https://site.api.espn.com/apis/site/v2/sports/basketball/nba/summary?event=${gameId}`
+          );
+
+        const data = await res.json();
+
+        const latestThree =
+          (data?.plays || [])
+            .slice(-3)
+            .reverse();
+
+        if (!latestThree.length) {
+          return `
+            <div class="play">
+              No recent plays available
+            </div>
+          `;
+        }
+
+        return latestThree.map(play => {
+          const hasScore =
+            play.awayScore !== undefined &&
+            play.homeScore !== undefined;
+
+          const scoreText =
+            hasScore
+              ? `
+                <span class="score-change">
+                  (${awayAbbr} ${play.awayScore}
+                  - ${homeAbbr} ${play.homeScore})
+                </span>
+              `
+              : "";
+
+          const timestamp =
+            getPlayTimestamp(play);
+
+          return `
+            <div class="play">
+              <span class="play-time">
+                ${timestamp}
+              </span>
+
+              ${escapeHTML(
+                play.text ||
+                "Play unavailable"
+              )}
+
+              ${scoreText}
+            </div>
+          `;
+        }).join("");
+
+      } catch (err) {
+        console.error("Play-by-play fetch failed", err);
+
+        return `
+          <div class="play">
+            Play-by-play unavailable
+          </div>
+        `;
+      }
+    }
+
+    async function updateMomentum(
+      gameId,
+      awayTeam,
+      homeTeam
+    ) {
+      try {
+        const res =
+          await fetch(
+            `https://site.api.espn.com/apis/site/v2/sports/basketball/nba/summary?event=${gameId}`
+          );
+
+        const data =
+          await res.json();
+
+        const plays =
+          data?.plays || [];
+
+        const recent =
+          plays
+            .filter(play =>
+              play.awayScore !== undefined &&
+              play.homeScore !== undefined
+            )
+            .slice(-12);
+
+        let awayDelta = 0;
+        let homeDelta = 0;
+
+        for (let i = 1; i < recent.length; i++) {
+          const prev =
+            recent[i - 1];
+
+          const curr =
+            recent[i];
+
+          const awayDiff =
+            Number(curr.awayScore || 0) -
+            Number(prev.awayScore || 0);
+
+          const homeDiff =
+            Number(curr.homeScore || 0) -
+            Number(prev.homeScore || 0);
+
+          awayDelta += Math.max(0, awayDiff);
+          homeDelta += Math.max(0, homeDiff);
+        }
+
+        const card =
+          gameCards[gameId];
+
+        if (!card) return;
+
+        const awayBar =
+          card.querySelector(".momentum-away");
+
+        const homeBar =
+          card.querySelector(".momentum-home");
+
+        const runText =
+          card.querySelector(".momentum-run-text");
+
+        const awayLabel =
+          card.querySelector(".momentum-away-label");
+
+        const homeLabel =
+          card.querySelector(".momentum-home-label");
+
+        awayLabel.textContent =
+          `${awayTeam} ${awayDelta}`;
+
+        homeLabel.textContent =
+          `${homeTeam} ${homeDelta}`;
+
+        if (recent.length < 2 || awayDelta + homeDelta === 0) {
+          awayBar.style.width = "50%";
+          homeBar.style.width = "50%";
+          runText.textContent = "Momentum even";
+          return;
+        }
+
+        const total =
+          awayDelta + homeDelta;
+
+        let awayPct =
+          (awayDelta / total) * 100;
+
+        let homePct =
+          (homeDelta / total) * 100;
+
+        awayPct =
+          Math.max(8, Math.min(92, awayPct));
+
+        homePct =
+          Math.max(8, Math.min(92, homePct));
+
+        awayBar.style.width =
+          `${awayPct}%`;
+
+        homeBar.style.width =
+          `${homePct}%`;
+
+        if (awayDelta > homeDelta) {
+          runText.textContent =
+            `${awayTeam} +${awayDelta - homeDelta} recent edge`;
+        } else if (homeDelta > awayDelta) {
+          runText.textContent =
+            `${homeTeam} +${homeDelta - awayDelta} recent edge`;
+        } else {
+          runText.textContent =
+            "Momentum even";
+        }
+
+      } catch (err) {
+        console.error(
+          "Momentum update failed",
+          err
+        );
+      }
+    }
+
+    function redditSearchUrl(query) {
       return (
-        (isGameThread || hasGameFlair) &&
-        !isPostgame
+        "https://www.reddit.com/r/nba/search.json" +
+        `?q=${encodeURIComponent(query)}` +
+        "&restrict_sr=1" +
+        "&sort=new" +
+        "&t=day" +
+        "&limit=25"
       );
+    }
+
+    function redditSearchPageUrl(query) {
+      return (
+        "https://www.reddit.com/r/nba/search/" +
+        `?q=${encodeURIComponent(query)}` +
+        "&restrict_sr=1" +
+        "&sort=new"
+      );
+    }
+
+    function redditCommentsUrl(permalink, sort) {
+      return (
+        `https://www.reddit.com${permalink}.json` +
+        `?sort=${encodeURIComponent(sort)}` +
+        "&limit=8"
+      );
+    }
+
+    function normalizeText(value) {
+      return String(value || "")
+        .toLowerCase()
+        .replace(/[^a-z0-9\s]/g, " ")
+        .replace(/\s+/g, " ")
+        .trim();
+    }
+
+    function getTeamTokens(displayName, abbr) {
+      const parts =
+        normalizeText(displayName)
+          .split(" ")
+          .filter(Boolean);
+
+      const nickname =
+        parts[parts.length - 1];
+
+      return [
+        normalizeText(displayName),
+        normalizeText(abbr),
+        nickname
+      ].filter(Boolean);
+    }
+
+    function buildThreadQueries(
+      awayName,
+      homeName,
+      awayAbbr,
+      homeAbbr,
+      type
+    ) {
+      const label =
+        type === "postgame"
+          ? "Post Game Thread"
+          : "Game Thread";
+
+      const awayNick =
+        getTeamTokens(awayName, awayAbbr).slice(-1)[0];
+
+      const homeNick =
+        getTeamTokens(homeName, homeAbbr).slice(-1)[0];
+
+      if (type === "postgame") {
+        return [
+          "Post Game Thread",
+          `${label} ${awayName} ${homeName}`,
+          `${label} ${awayAbbr} ${homeAbbr}`,
+          `${label} ${awayNick} ${homeNick}`
+        ];
+      }
+
+      return [
+        "Game Thread",
+        `${label} ${awayName} ${homeName}`,
+        `${label} ${awayAbbr} ${homeAbbr}`,
+        `${label} ${awayNick} ${homeNick}`,
+        `${awayNick} ${homeNick} ${label}`
+      ];
+    }
+
+    function scoreRedditPost(
+      post,
+      awayName,
+      homeName,
+      awayAbbr,
+      homeAbbr,
+      type
+    ) {
+      const title =
+        normalizeText(post.title);
+
+      const flair =
+        normalizeText(post.link_flair_text);
+
+      const awayTokens =
+        getTeamTokens(awayName, awayAbbr);
+
+      const homeTokens =
+        getTeamTokens(homeName, homeAbbr);
+
+      const awayMatch =
+        awayTokens.some(token => title.includes(token));
+
+      const homeMatch =
+        homeTokens.some(token => title.includes(token));
+
+      const startsGame =
+        title.startsWith("game thread");
+
+      const startsPostgame =
+        title.startsWith("post game thread") ||
+        title.startsWith("postgame thread");
+
+      const hasGameThread =
+        title.includes("game thread");
+
+      const hasPostgame =
+        title.includes("post game") ||
+        title.includes("postgame");
+
+      const flairGame =
+        flair.includes("game");
+
+      const flairPost =
+        flair.includes("post");
+
+      let score = 0;
+
+      if (type === "game") {
+        if (hasPostgame || flairPost) return -1;
+        if (startsGame) score += 10;
+        if (hasGameThread) score += 6;
+        if (flairGame) score += 4;
+      }
+
+      if (type === "postgame") {
+        if (startsPostgame) score += 10;
+        if (hasPostgame) score += 7;
+        if (flairPost) score += 4;
+      }
+
+      if (awayMatch) score += 4;
+      if (homeMatch) score += 4;
+      if (awayMatch && homeMatch) score += 8;
+
+      if (!awayMatch && !homeMatch) {
+        score -= 8;
+      }
+
+      if (post.created_utc) {
+        const ageHours =
+          (Date.now() / 1000 - post.created_utc) / 3600;
+
+        if (ageHours <= 8) score += 3;
+        else if (ageHours <= 24) score += 1;
+        else score -= 4;
+      }
+
+      return score;
     }
 
     async function findRedditThread(
@@ -892,7 +1696,6 @@
       homeAbbr,
       type
     ) {
-
       const queries =
         buildThreadQueries(
           awayName,
@@ -902,13 +1705,11 @@
           type
         );
 
-      let bestMatch = null;
+      let bestPost = null;
       let bestScore = -1;
 
       for (const query of queries) {
-
         try {
-
           const res =
             await fetch(
               redditSearchUrl(query)
@@ -923,103 +1724,607 @@
             ) || [];
 
           for (const post of posts) {
-
-            const title =
-              post.title || "";
-
-            const flair =
-              post.link_flair_text || "";
-
-            if (
-              !postMatchesThreadType(
-                title,
-                type,
-                flair
-              )
-            ) {
-              continue;
-            }
-
-            let score = 0;
-
-            const normalizedTitle =
-              normalizeText(title);
-
-            const awayTokens =
-              getTeamTokens(
+            const score =
+              scoreRedditPost(
+                post,
                 awayName,
-                awayAbbr
-              );
-
-            const homeTokens =
-              getTeamTokens(
                 homeName,
-                homeAbbr
+                awayAbbr,
+                homeAbbr,
+                type
               );
 
-            const awayMatch =
-              awayTokens.some(token =>
-                normalizedTitle.includes(token)
-              );
-
-            const homeMatch =
-              homeTokens.some(token =>
-                normalizedTitle.includes(token)
-              );
-
-            if (
-              normalizedTitle.startsWith("game thread")
-            ) {
-              score += 4;
-            }
-
-            if (
-              normalizedTitle.startsWith("post game thread")
-            ) {
-              score += 4;
-            }
-
-            if (
-              flair.toLowerCase().includes("game")
-            ) {
-              score += 2;
-            }
-
-            if (awayMatch) {
-              score += 3;
-            }
-
-            if (homeMatch) {
-              score += 3;
-            }
-
-            if (
-              awayMatch &&
-              homeMatch
-            ) {
-              score += 5;
-            }
-
-            if (
-              score > bestScore
-            ) {
-
+            if (score > bestScore) {
               bestScore = score;
-              bestMatch = post;
+              bestPost = post;
             }
           }
 
         } catch (err) {
-
-          console.error(
-            "Reddit search failed",
-            err
-          );
+          console.error("Reddit search failed", err);
         }
       }
 
-      return bestMatch;
+      return bestScore >= 8
+        ? bestPost
+        : null;
     }
+
+    async function getRedditComments(permalink, sort) {
+      const res =
+        await fetch(
+          redditCommentsUrl(
+            permalink,
+            sort
+          )
+        );
+
+      const data =
+        await res.json();
+
+      const comments =
+        data?.[1]?.data?.children
+          ?.filter(
+            item => item.kind === "t1"
+          )
+          ?.map(
+            item => item.data
+          )
+          ?.filter(
+            comment =>
+              comment.body &&
+              comment.body !== "[deleted]"
+          )
+          ?.slice(0, 6) || [];
+
+      return comments;
+    }
+
+    function renderRedditThread(
+      targetEl,
+      thread,
+      comments,
+      fallbackText,
+      fallbackSearchUrl
+    ) {
+      if (!thread) {
+        targetEl.innerHTML = `
+          <div class="reddit-fallback">
+            ${escapeHTML(fallbackText)}
+          </div>
+
+          ${
+            fallbackSearchUrl
+              ? `
+                <a
+                  class="reddit-thread-link"
+                  href="${fallbackSearchUrl}"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Open Reddit search
+                </a>
+              `
+              : ""
+          }
+        `;
+
+        return;
+      }
+
+      const commentsHTML =
+        comments.length
+          ? comments.map(comment => {
+              return `
+                <div class="comment">
+                  <div class="comment-meta">
+                    u/${escapeHTML(comment.author)}
+                    • ${comment.score} upvotes
+                  </div>
+
+                  <div class="comment-body">
+                    ${escapeHTML(comment.body)}
+                  </div>
+                </div>
+              `;
+            }).join("")
+          : `
+            <div class="comment">
+              No comments found yet.
+            </div>
+          `;
+
+      targetEl.innerHTML = `
+        <a
+          class="reddit-thread-link"
+          href="https://www.reddit.com${thread.permalink}"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          ${escapeHTML(thread.title)}
+        </a>
+
+        ${commentsHTML}
+      `;
+    }
+
+    async function refreshRedditForGame(
+      gameId,
+      force = false
+    ) {
+      if (
+        redditRefreshPaused &&
+        !force
+      ) {
+        return;
+      }
+
+      const state =
+        redditState[gameId];
+
+      if (!state) return;
+
+      const now =
+        Date.now();
+
+      if (
+        !force &&
+        state.lastRefresh &&
+        now - state.lastRefresh < 30000
+      ) {
+        return;
+      }
+
+      state.lastRefresh = now;
+
+      const card =
+        gameCards[gameId];
+
+      const sort =
+        card.querySelector(
+          ".reddit-sort"
+        ).value;
+
+      const gameThreadEl =
+        card.querySelector(
+          ".reddit-game-thread"
+        );
+
+      const postgameThreadEl =
+        card.querySelector(
+          ".reddit-postgame-thread"
+        );
+
+      const gameFallbackUrl =
+        redditSearchPageUrl(
+          `${state.awayName} ${state.homeName} Game Thread`
+        );
+
+      const postgameFallbackUrl =
+        redditSearchPageUrl(
+          `${state.awayName} ${state.homeName} Post Game Thread`
+        );
+
+      try {
+        if (!state.gameThread) {
+          state.gameThread =
+            await findRedditThread(
+              state.awayName,
+              state.homeName,
+              state.awayAbbr,
+              state.homeAbbr,
+              "game"
+            );
+        }
+
+        if (state.gameThread) {
+          const comments =
+            await getRedditComments(
+              state.gameThread.permalink,
+              sort
+            );
+
+          renderRedditThread(
+            gameThreadEl,
+            state.gameThread,
+            comments,
+            "No game thread found yet.",
+            gameFallbackUrl
+          );
+        } else {
+          renderRedditThread(
+            gameThreadEl,
+            null,
+            [],
+            "No exact game thread found. Reddit may be blocking the lookup, or the thread title may use unusual wording.",
+            gameFallbackUrl
+          );
+        }
+
+        if (state.isFinal) {
+          if (
+            !state.postgameThread &&
+            !state.postgameStopped
+          ) {
+            state.postgameThread =
+              await findRedditThread(
+                state.awayName,
+                state.homeName,
+                state.awayAbbr,
+                state.homeAbbr,
+                "postgame"
+              );
+          }
+
+          if (state.postgameThread) {
+            const postgameComments =
+              await getRedditComments(
+                state.postgameThread.permalink,
+                sort
+              );
+
+            renderRedditThread(
+              postgameThreadEl,
+              state.postgameThread,
+              postgameComments,
+              "No postgame thread found yet.",
+              postgameFallbackUrl
+            );
+          } else {
+            renderRedditThread(
+              postgameThreadEl,
+              null,
+              [],
+              state.postgameStopped
+                ? "No exact postgame thread found after final checks."
+                : "No exact postgame thread found yet.",
+              postgameFallbackUrl
+            );
+          }
+        } else {
+          postgameThreadEl.innerHTML =
+            "Available after final.";
+        }
+
+      } catch (err) {
+        console.error(
+          "Reddit refresh failed",
+          err
+        );
+
+        renderRedditThread(
+          gameThreadEl,
+          null,
+          [],
+          "Could not load Reddit directly. Use the search link instead.",
+          gameFallbackUrl
+        );
+      }
+    }
+
+    function schedulePostgameChecks(gameId) {
+      const state =
+        redditState[gameId];
+
+      if (
+        !state ||
+        state.postgameChecksScheduled
+      ) {
+        return;
+      }
+
+      state.postgameChecksScheduled =
+        true;
+
+      setTimeout(async () => {
+        await refreshRedditForGame(
+          gameId,
+          true
+        );
+
+        if (!state.postgameThread) {
+          setTimeout(async () => {
+            await refreshRedditForGame(
+              gameId,
+              true
+            );
+
+            if (!state.postgameThread) {
+              state.postgameStopped =
+                true;
+
+              await refreshRedditForGame(
+                gameId,
+                true
+              );
+            }
+          }, 60 * 60 * 1000);
+        }
+      }, 10 * 60 * 1000);
+    }
+
+    async function loadScores() {
+      try {
+        const res =
+          await fetch(
+            "https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard"
+          );
+
+        const data =
+          await res.json();
+
+        if (
+          !data.events ||
+          data.events.length === 0
+        ) {
+          scoresEl.innerHTML =
+            "<p>No NBA games today.</p>";
+
+          return;
+        }
+
+        for (const event of data.events) {
+          const comp =
+            event.competitions[0];
+
+          const teams =
+            comp.competitors;
+
+          const away =
+            teams.find(
+              t =>
+                t.homeAway === "away"
+            );
+
+          const home =
+            teams.find(
+              t =>
+                t.homeAway === "home"
+            );
+
+          const gameId =
+            event.id;
+
+          const card =
+            gameCards[gameId] ||
+            createGameCard(gameId);
+
+          const gameLabel =
+            `${away.team.abbreviation} vs ${home.team.abbreviation}`;
+
+          gameLabels[gameId] =
+            gameLabel;
+
+          const awayScore =
+            parseInt(
+              away.score || 0
+            );
+
+          const homeScore =
+            parseInt(
+              home.score || 0
+            );
+
+          const prevAway =
+            previousScores[
+              gameId
+            ]?.away ??
+            awayScore;
+
+          const prevHome =
+            previousScores[
+              gameId
+            ]?.home ??
+            homeScore;
+
+          const awayChanged =
+            awayScore !==
+            prevAway;
+
+          const homeChanged =
+            homeScore !==
+            prevHome;
+
+          previousScores[
+            gameId
+          ] = {
+            away: awayScore,
+            home: homeScore
+          };
+
+          card.querySelector(
+            ".away-abbr"
+          ).textContent =
+            away.team.abbreviation;
+
+          card.querySelector(
+            ".home-abbr"
+          ).textContent =
+            home.team.abbreviation;
+
+          card.querySelector(
+            ".away-name"
+          ).textContent =
+            away.team.displayName;
+
+          card.querySelector(
+            ".home-name"
+          ).textContent =
+            home.team.displayName;
+
+          const awayScoreEl =
+            card.querySelector(
+              ".away-score"
+            );
+
+          const homeScoreEl =
+            card.querySelector(
+              ".home-score"
+            );
+
+          if (
+            awayScoreEl.textContent !==
+            String(awayScore)
+          ) {
+            awayScoreEl.textContent =
+              awayScore;
+
+            if (awayChanged) {
+              flash(
+                awayScoreEl
+              );
+            }
+          }
+
+          if (
+            homeScoreEl.textContent !==
+            String(homeScore)
+          ) {
+            homeScoreEl.textContent =
+              homeScore;
+
+            if (homeChanged) {
+              flash(
+                homeScoreEl
+              );
+            }
+          }
+
+          const statusEl =
+            card.querySelector(
+              ".status"
+            );
+
+          const state =
+            event.status.type.state;
+
+          statusEl.textContent =
+            event.status.type.shortDetail;
+
+          statusEl.className =
+            "status" +
+            (
+              state === "in"
+                ? " live"
+                : ""
+            );
+
+          const broadcasts =
+            comp.broadcasts &&
+            comp.broadcasts.length
+              ? comp.broadcasts
+                  .map(
+                    b =>
+                      b.names
+                        ? b.names.join(", ")
+                        : b.name
+                  )
+                  .filter(
+                    Boolean
+                  )
+                  .join(", ")
+              : "TBD";
+
+          card.querySelector(
+            ".broadcast-text"
+          ).textContent =
+            broadcasts;
+
+          const playsHTML =
+            await getLatestPlays(
+              gameId,
+              away.team.abbreviation,
+              home.team.abbreviation
+            );
+
+          const playsList =
+            card.querySelector(
+              ".plays-list"
+            );
+
+          if (
+            playsList.innerHTML !==
+            playsHTML
+          ) {
+            playsList.innerHTML =
+              playsHTML;
+          }
+
+          await updateMomentum(
+            gameId,
+            away.team.abbreviation,
+            home.team.abbreviation
+          );
+
+          if (!redditState[gameId]) {
+            redditState[gameId] = {
+              awayName:
+                away.team.displayName,
+
+              homeName:
+                home.team.displayName,
+
+              awayAbbr:
+                away.team.abbreviation,
+
+              homeAbbr:
+                home.team.abbreviation,
+
+              gameThread:
+                null,
+
+              postgameThread:
+                null,
+
+              isFinal:
+                false,
+
+              postgameChecksScheduled:
+                false,
+
+              postgameStopped:
+                false,
+
+              lastRefresh:
+                0
+            };
+          }
+
+          redditState[gameId].isFinal =
+            state === "post";
+
+          await refreshRedditForGame(
+            gameId
+          );
+
+          if (state === "post") {
+            schedulePostgameChecks(
+              gameId
+            );
+          }
+        }
+
+        updateHiddenGamesUI();
+
+        updatedEl.textContent =
+          "Updated " +
+          new Date()
+            .toLocaleTimeString();
+
+      } catch (err) {
+        console.error(err);
+
+        scoresEl.innerHTML =
+          "<p>Failed to load scores.</p>";
+      }
+    }
+
+    loadScores();
+
+    setInterval(
+      loadScores,
+      1000
+    );
   </script>
 
 </body>
