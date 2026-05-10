@@ -771,6 +771,28 @@
       line-height: 1.4;
     }
 
+    .boxscore-team-title {
+      margin-top: 12px;
+      margin-bottom: 6px;
+      color: #d8d8dd;
+      font-size: 12px;
+      font-weight: 950;
+      text-transform: uppercase;
+      letter-spacing: 0.9px;
+    }
+
+    .boxscore-scroll {
+      overflow-x: auto;
+      padding-bottom: 2px;
+    }
+
+    .boxscore-player-name {
+      max-width: 128px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+
     .reddit-side {
       border-left: 1px solid #242428;
       padding-left: 20px;
@@ -1065,13 +1087,16 @@
     const gameCards = {};
     const redditState = {};
     const gameLabels = {};
+    const gameKeys = {};
     const summaryCache = {};
     const boxScoreVisible = {};
 
     const hiddenGames =
       new Set(
         JSON.parse(
-          localStorage.getItem("hiddenNbaGames") || "[]"
+          localStorage.getItem("hiddenNbaGameKeys") ||
+          localStorage.getItem("hiddenNbaGames") ||
+          "[]"
         )
       );
 
@@ -1208,29 +1233,47 @@
 
     function saveHiddenGames() {
       localStorage.setItem(
-        "hiddenNbaGames",
+        "hiddenNbaGameKeys",
         JSON.stringify([...hiddenGames])
+      );
+    }
+
+    function getHiddenKeyForGame(gameId) {
+      return gameKeys[gameId] || gameId;
+    }
+
+    function getVisibleHiddenKeys() {
+      const prefix =
+        currentScoreboardDate
+          ? `${currentScoreboardDate}:`
+          : "";
+
+      return [...hiddenGames].filter(key =>
+        !prefix || String(key).startsWith(prefix)
       );
     }
 
     function updateHiddenGamesUI() {
       hiddenGamesListEl.innerHTML = "";
 
-      if (hiddenGames.size === 0) {
+      const visibleHiddenKeys =
+        getVisibleHiddenKeys();
+
+      if (visibleHiddenKeys.length === 0) {
         hiddenGamesEl.classList.remove("active");
         return;
       }
 
       hiddenGamesEl.classList.add("active");
 
-      [...hiddenGames].forEach(gameId => {
+      visibleHiddenKeys.forEach(gameKey => {
         const button = document.createElement("button");
 
         button.className = "hidden-game-button";
-        button.textContent = gameLabels[gameId] || `Game ${gameId}`;
+        button.textContent = gameLabels[gameKey] || `Hidden game`;
 
         button.addEventListener("click", () => {
-          unhideGame(gameId);
+          unhideGameByKey(gameKey);
         });
 
         hiddenGamesListEl.appendChild(button);
@@ -1238,7 +1281,10 @@
     }
 
     function hideGame(gameId) {
-      hiddenGames.add(gameId);
+      const gameKey =
+        getHiddenKeyForGame(gameId);
+
+      hiddenGames.add(gameKey);
       saveHiddenGames();
 
       if (gameCards[gameId]) {
@@ -1249,12 +1295,24 @@
     }
 
     function unhideGame(gameId) {
-      hiddenGames.delete(gameId);
+      const gameKey =
+        getHiddenKeyForGame(gameId);
+
+      unhideGameByKey(gameKey);
+    }
+
+    function unhideGameByKey(gameKey) {
+      hiddenGames.delete(gameKey);
       saveHiddenGames();
 
-      if (gameCards[gameId]) {
-        gameCards[gameId].classList.remove("hidden");
-      }
+      Object.keys(gameKeys).forEach(gameId => {
+        if (
+          gameKeys[gameId] === gameKey &&
+          gameCards[gameId]
+        ) {
+          gameCards[gameId].classList.remove("hidden");
+        }
+      });
 
       updateHiddenGamesUI();
     }
@@ -1267,15 +1325,12 @@
           delete gameCards[gameId];
           delete previousScores[gameId];
           delete redditState[gameId];
-          delete gameLabels[gameId];
           delete summaryCache[gameId];
           delete boxScoreVisible[gameId];
-
-          hiddenGames.delete(gameId);
+          delete gameKeys[gameId];
         }
       });
 
-      saveHiddenGames();
       updateHiddenGamesUI();
     }
 
@@ -1286,14 +1341,11 @@
         delete gameCards[gameId];
         delete previousScores[gameId];
         delete redditState[gameId];
-        delete gameLabels[gameId];
         delete summaryCache[gameId];
         delete boxScoreVisible[gameId];
-
-        hiddenGames.delete(gameId);
+        delete gameKeys[gameId];
       });
 
-      saveHiddenGames();
       updateHiddenGamesUI();
     }
 
@@ -1499,7 +1551,7 @@
             : "Hide scores";
       });
 
-      if (hiddenGames.has(gameId)) {
+      if (hiddenGames.has(getHiddenKeyForGame(gameId))) {
         card.classList.add("hidden");
       }
 
@@ -1742,119 +1794,191 @@
       }
     }
 
-    function findStatValue(stats, possibleNames) {
-      if (!Array.isArray(stats)) return "—";
-
-      const loweredNames =
-        possibleNames.map(name => name.toLowerCase());
-
-      const stat =
-        stats.find(item => {
-          const candidates = [
-            item.name,
-            item.displayName,
-            item.shortDisplayName,
-            item.abbreviation,
-            item.label
-          ]
-            .filter(Boolean)
-            .map(value => String(value).toLowerCase());
-
-          return candidates.some(candidate =>
-            loweredNames.some(name =>
-              candidate === name ||
-              candidate.includes(name)
-            )
-          );
-        });
-
-      return (
-        stat?.displayValue ||
-        stat?.value ||
-        "—"
-      );
+    function normalizeStatLabel(value) {
+      return String(value || "")
+        .toLowerCase()
+        .replace(/[^a-z0-9+\-/]/g, "");
     }
 
-    function getTeamBoxStats(summaryData, awayAbbr, homeAbbr) {
-      const teams =
-        summaryData?.boxscore?.teams || [];
-
-      function getForTeam(abbr) {
-        const teamBox =
-          teams.find(item =>
-            item.team?.abbreviation === abbr
-          );
-
-        const stats =
-          teamBox?.statistics || [];
-
-        return {
-          abbr,
-          fg: findStatValue(stats, ["field goals", "fg"]),
-          three: findStatValue(stats, ["3pt field goals", "three point", "3pt", "3p"]),
-          reb: findStatValue(stats, ["rebounds", "reb"]),
-          ast: findStatValue(stats, ["assists", "ast"]),
-          to: findStatValue(stats, ["turnovers", "to"])
-        };
+    function getStatByLabel(labels, stats, possibleLabels) {
+      if (!Array.isArray(labels) || !Array.isArray(stats)) {
+        return "—";
       }
 
-      return [
-        getForTeam(awayAbbr),
-        getForTeam(homeAbbr)
-      ];
+      const wanted =
+        possibleLabels.map(normalizeStatLabel);
+
+      const index =
+        labels.findIndex(label =>
+          wanted.includes(normalizeStatLabel(label))
+        );
+
+      if (index === -1) {
+        return "—";
+      }
+
+      return stats[index] ?? "—";
     }
 
-    function renderMinimalBoxScore(summaryData, awayAbbr, homeAbbr) {
-      const rows =
-        getTeamBoxStats(
-          summaryData,
-          awayAbbr,
-          homeAbbr
+    function parsePoints(value) {
+      const number =
+        Number(String(value || "0").replace(/[^\d.-]/g, ""));
+
+      return Number.isFinite(number)
+        ? number
+        : 0;
+    }
+
+    function getPlayerRowsForTeam(teamBox) {
+      const statGroup =
+        teamBox?.statistics?.find(group =>
+          Array.isArray(group.labels) &&
+          Array.isArray(group.athletes) &&
+          group.athletes.length
         );
 
-      const hasSomeStats =
-        rows.some(row =>
-          [row.fg, row.three, row.reb, row.ast, row.to]
-            .some(value => value !== "—")
-        );
+      if (!statGroup) {
+        return [];
+      }
 
-      if (!hasSomeStats) {
+      const labels =
+        statGroup.labels || [];
+
+      return statGroup.athletes
+        .map(item => {
+          const athlete =
+            item.athlete || {};
+
+          const stats =
+            item.stats || [];
+
+          return {
+            name:
+              athlete.shortName ||
+              athlete.displayName ||
+              "Player",
+
+            min:
+              getStatByLabel(labels, stats, ["MIN", "MINUTES"]),
+
+            pts:
+              getStatByLabel(labels, stats, ["PTS", "POINTS"]),
+
+            reb:
+              getStatByLabel(labels, stats, ["REB", "REBOUNDS"]),
+
+            ast:
+              getStatByLabel(labels, stats, ["AST", "ASSISTS"]),
+
+            stl:
+              getStatByLabel(labels, stats, ["STL", "STEALS"]),
+
+            blk:
+              getStatByLabel(labels, stats, ["BLK", "BLOCKS"]),
+
+            to:
+              getStatByLabel(labels, stats, ["TO", "TURNOVERS"])
+          };
+        })
+        .filter(row =>
+          row.min !== "—" ||
+          row.pts !== "—" ||
+          row.reb !== "—" ||
+          row.ast !== "—"
+        )
+        .sort((a, b) =>
+          parsePoints(b.pts) - parsePoints(a.pts)
+        )
+        .slice(0, 7);
+    }
+
+    function renderPlayerRows(rows) {
+      if (!rows.length) {
         return `
           <div class="boxscore-note">
-            Minimal box score is not available yet. It usually appears once the ESPN game summary starts filling in.
+            Player stats are not available yet.
           </div>
         `;
       }
 
       return `
-        <table class="boxscore-table">
-          <thead>
-            <tr>
-              <th>Team</th>
-              <th>FG</th>
-              <th>3PT</th>
-              <th>REB</th>
-              <th>AST</th>
-              <th>TO</th>
-            </tr>
-          </thead>
-
-          <tbody>
-            ${rows.map(row => `
+        <div class="boxscore-scroll">
+          <table class="boxscore-table">
+            <thead>
               <tr>
-                <td>${escapeHTML(row.abbr)}</td>
-                <td>${escapeHTML(row.fg)}</td>
-                <td>${escapeHTML(row.three)}</td>
-                <td>${escapeHTML(row.reb)}</td>
-                <td>${escapeHTML(row.ast)}</td>
-                <td>${escapeHTML(row.to)}</td>
+                <th>Player</th>
+                <th>MIN</th>
+                <th>PTS</th>
+                <th>REB</th>
+                <th>AST</th>
+                <th>STL</th>
+                <th>BLK</th>
+                <th>TO</th>
               </tr>
-            `).join("")}
-          </tbody>
-        </table>
+            </thead>
+
+            <tbody>
+              ${rows.map(row => `
+                <tr>
+                  <td class="boxscore-player-name">${escapeHTML(row.name)}</td>
+                  <td>${escapeHTML(row.min)}</td>
+                  <td>${escapeHTML(row.pts)}</td>
+                  <td>${escapeHTML(row.reb)}</td>
+                  <td>${escapeHTML(row.ast)}</td>
+                  <td>${escapeHTML(row.stl)}</td>
+                  <td>${escapeHTML(row.blk)}</td>
+                  <td>${escapeHTML(row.to)}</td>
+                </tr>
+              `).join("")}
+            </tbody>
+          </table>
+        </div>
+      `;
+    }
+
+    function renderMinimalBoxScore(summaryData, awayAbbr, homeAbbr) {
+      const teamBoxes =
+        summaryData?.boxscore?.players || [];
+
+      const awayTeamBox =
+        teamBoxes.find(item =>
+          item.team?.abbreviation === awayAbbr
+        );
+
+      const homeTeamBox =
+        teamBoxes.find(item =>
+          item.team?.abbreviation === homeAbbr
+        );
+
+      const awayRows =
+        getPlayerRowsForTeam(awayTeamBox);
+
+      const homeRows =
+        getPlayerRowsForTeam(homeTeamBox);
+
+      if (!awayRows.length && !homeRows.length) {
+        return `
+          <div class="boxscore-note">
+            Player box score is not available yet. It usually appears once the ESPN game summary starts filling in.
+          </div>
+        `;
+      }
+
+      return `
+        <div class="boxscore-team-title">
+          ${escapeHTML(awayAbbr)}
+        </div>
+
+        ${renderPlayerRows(awayRows)}
+
+        <div class="boxscore-team-title">
+          ${escapeHTML(homeAbbr)}
+        </div>
+
+        ${renderPlayerRows(homeRows)}
 
         <div class="boxscore-note">
-          Compact team stats only.
+          Top players by points. Toggle off to hide.
         </div>
       `;
     }
@@ -2078,6 +2202,10 @@
             `${url}${separator}cacheBust=${Date.now()}`
           );
 
+        if (!res.ok) {
+          throw new Error(`Reddit returned ${res.status}`);
+        }
+
         const data =
           await res.json();
 
@@ -2107,7 +2235,9 @@
 
       const urls = [
         "https://www.reddit.com/r/nba/new.json?limit=100&raw_json=1",
-        "https://www.reddit.com/r/nba/hot.json?limit=100&raw_json=1"
+        "https://www.reddit.com/r/nba/hot.json?limit=100&raw_json=1",
+        "https://old.reddit.com/r/nba/new.json?limit=100&raw_json=1",
+        "https://old.reddit.com/r/nba/hot.json?limit=100&raw_json=1"
       ];
 
       queries.forEach(query => {
@@ -2206,6 +2336,28 @@
                   rel="noopener noreferrer"
                 >
                   Open Reddit search
+                </a>
+
+                <br />
+
+                <a
+                  class="reddit-thread-link"
+                  href="https://www.reddit.com/r/nba/new/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Open r/nba new
+                </a>
+
+                <br />
+
+                <a
+                  class="reddit-thread-link"
+                  href="https://www.reddit.com/r/nba/hot/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Open r/nba hot
                 </a>
               `
               : ""
@@ -2517,15 +2669,27 @@
           const gameId =
             event.id;
 
+          const gameLabel =
+            `${away.team.abbreviation} vs ${home.team.abbreviation}`;
+
+          const gameKey =
+            `${scoreboardDate}:${away.team.abbreviation}:${home.team.abbreviation}`;
+
+          gameKeys[gameId] =
+            gameKey;
+
+          gameLabels[gameKey] =
+            gameLabel;
+
           const card =
             gameCards[gameId] ||
             createGameCard(gameId);
 
-          const gameLabel =
-            `${away.team.abbreviation} vs ${home.team.abbreviation}`;
-
-          gameLabels[gameId] =
-            gameLabel;
+          if (hiddenGames.has(gameKey)) {
+            card.classList.add("hidden");
+          } else {
+            card.classList.remove("hidden");
+          }
 
           const awayScore =
             parseInt(
