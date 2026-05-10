@@ -12,38 +12,78 @@
 
     :root {
       --score-column-width: 150px;
+      --bg: #050505;
+      --panel: #0d0d0f;
+      --panel-soft: #141416;
+      --border: #242428;
+      --text: #f5f5f5;
+      --muted: #8a8a8f;
+      --red: #ff2b2b;
+      --green: #22c55e;
+      --gold: #f5c542;
     }
 
     body {
       margin: 0;
+      min-height: 100vh;
       padding: 32px;
-      background: #000;
-      color: #f5f5f5;
-      font-family: Inter, system-ui, sans-serif;
+      background:
+        radial-gradient(circle at top left, rgba(255, 43, 43, 0.14), transparent 36%),
+        radial-gradient(circle at top right, rgba(34, 197, 94, 0.08), transparent 30%),
+        var(--bg);
+      color: var(--text);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    .page {
+      max-width: 1240px;
+      margin: 0 auto;
+    }
+
+    .hero {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      gap: 20px;
+      margin-bottom: 24px;
     }
 
     h1 {
-      margin: 0 0 8px;
-      font-size: 42px;
-      font-weight: 800;
-      letter-spacing: -1px;
+      margin: 0;
+      font-size: clamp(34px, 5vw, 56px);
+      font-weight: 950;
+      letter-spacing: -2px;
+      line-height: 0.95;
     }
 
-    #updated {
-      color: #666;
-      margin-bottom: 20px;
+    .subtitle {
+      margin-top: 10px;
+      color: var(--muted);
       font-size: 14px;
     }
 
+    #updated {
+      color: #aaa;
+      font-size: 13px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 8px 12px;
+      white-space: nowrap;
+    }
+
     .controls {
-      max-width: 1200px;
-      margin-bottom: 24px;
+      margin-bottom: 22px;
       padding: 16px;
-      background: #080808;
-      border: 1px solid #181818;
-      border-radius: 16px;
+      background: rgba(13, 13, 15, 0.82);
+      border: 1px solid var(--border);
+      border-radius: 22px;
       display: grid;
-      gap: 18px;
+      gap: 16px;
+      box-shadow:
+        0 20px 60px rgba(0,0,0,0.35),
+        inset 0 1px 0 rgba(255,255,255,0.04);
+      backdrop-filter: blur(14px);
     }
 
     .control-row {
@@ -52,34 +92,34 @@
       gap: 14px;
     }
 
-    .control-row label {
-      color: #aaa;
-      font-size: 13px;
+    .control-row label,
+    .toggle-label {
+      color: #c9c9ce;
+      font-size: 12px;
+      font-weight: 800;
       text-transform: uppercase;
       letter-spacing: 1px;
       white-space: nowrap;
     }
 
-    input[type="range"],
-    select {
-      accent-color: #ff2b2b;
-    }
-
     input[type="range"] {
       width: 100%;
+      accent-color: var(--red);
     }
 
     select {
-      background: #111;
+      background: #101012;
       color: white;
-      border: 1px solid #333;
-      border-radius: 8px;
-      padding: 8px;
+      border: 1px solid #33333a;
+      border-radius: 10px;
+      padding: 8px 10px;
+      accent-color: var(--red);
     }
 
     .reddit-toggle {
       display: flex;
       align-items: center;
+      flex-wrap: wrap;
       gap: 10px;
       color: #ddd;
       font-size: 14px;
@@ -88,22 +128,21 @@
     .reddit-toggle input {
       width: 18px;
       height: 18px;
-      accent-color: #ff2b2b;
+      accent-color: var(--red);
     }
 
     .reddit-status {
-      color: #777;
+      color: var(--muted);
       font-size: 12px;
     }
 
     #hiddenGames {
-      max-width: 1200px;
-      margin-bottom: 16px;
+      margin-bottom: 18px;
       display: none;
       padding: 14px;
-      background: #080808;
-      border: 1px solid #181818;
-      border-radius: 16px;
+      background: rgba(13,13,15,0.82);
+      border: 1px solid var(--border);
+      border-radius: 18px;
     }
 
     #hiddenGames.active {
@@ -111,11 +150,12 @@
     }
 
     .hidden-title {
-      color: #777;
+      color: var(--muted);
       font-size: 12px;
       text-transform: uppercase;
       letter-spacing: 1px;
       margin-bottom: 10px;
+      font-weight: 800;
     }
 
     .hidden-list {
@@ -124,69 +164,89 @@
       gap: 10px;
     }
 
+    button {
+      font-family: inherit;
+    }
+
     .hidden-game-button,
     .hide-game-button,
     .spoiler-toggle-button {
-      background: #111;
+      background: #111114;
       color: #ddd;
-      border: 1px solid #333;
+      border: 1px solid #33333a;
       border-radius: 999px;
       padding: 8px 12px;
       cursor: pointer;
       font-size: 12px;
+      font-weight: 750;
+      transition: 0.15s ease;
     }
 
     .hidden-game-button:hover,
     .hide-game-button:hover,
     .spoiler-toggle-button:hover {
-      border-color: #ff2b2b;
+      border-color: var(--red);
       color: white;
+      transform: translateY(-1px);
     }
 
     #scores {
       display: grid;
-      gap: 16px;
-      max-width: 1200px;
+      gap: 18px;
     }
 
     .game {
       position: relative;
       display: grid;
       grid-template-columns: minmax(0, 1fr) 420px;
-      gap: 18px;
-      background: #0a0a0a;
-      border: 1px solid #1a1a1a;
-      border-radius: 20px;
-      padding: 22px;
+      gap: 20px;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.035), transparent 20%),
+        var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 28px;
+      padding: 24px;
       box-shadow:
-        0 0 0 1px rgba(255,255,255,0.02),
-        0 10px 30px rgba(0,0,0,0.5);
+        0 22px 70px rgba(0,0,0,0.45),
+        inset 0 1px 0 rgba(255,255,255,0.04);
+      overflow: hidden;
+    }
+
+    .game::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: 28px;
+      pointer-events: none;
+      background: linear-gradient(90deg, rgba(255,43,43,0.16), transparent 28%);
+      opacity: 0.55;
     }
 
     .game.hidden {
       display: none;
     }
 
-    .hide-game-button {
-      position: absolute;
-      top: 12px;
-      right: 12px;
-      z-index: 2;
+    .main-side,
+    .reddit-side {
+      position: relative;
+      z-index: 1;
     }
 
-    .spoiler-toggle-button {
+    .card-actions {
       position: absolute;
-      top: 12px;
-      right: 110px;
-      z-index: 2;
+      top: 14px;
+      right: 14px;
+      z-index: 3;
+      display: flex;
+      gap: 8px;
     }
 
     .game.spoiler-hidden .score {
       color: transparent !important;
       text-shadow: none !important;
-      background: #1b1b1b;
-      border-radius: 8px;
-      min-width: 52px;
+      background: #1b1b1f;
+      border-radius: 12px;
+      min-width: 58px;
     }
 
     .game.spoiler-hidden .score.flash {
@@ -195,20 +255,21 @@
 
     .game.spoiler-hidden .score::after {
       content: "••";
-      color: #666;
+      color: #6f6f76;
     }
 
     .scoreboard {
       display: grid;
       grid-template-columns: var(--score-column-width) 1fr;
-      gap: 28px;
+      gap: 30px;
       align-items: center;
-      padding-right: 180px;
+      padding-right: 190px;
+      margin-bottom: 18px;
     }
 
     .scores-left {
       display: grid;
-      gap: 12px;
+      gap: 14px;
       justify-items: start;
     }
 
@@ -219,20 +280,23 @@
     }
 
     .score-label {
-      width: 42px;
-      color: #777;
+      width: 44px;
+      color: #999;
       font-size: 13px;
-      font-weight: 800;
+      font-weight: 950;
       text-transform: uppercase;
+      letter-spacing: 0.8px;
     }
 
     .score {
-      font-size: 46px;
-      font-weight: 900;
+      font-size: 50px;
+      line-height: 0.95;
+      font-weight: 950;
       color: white;
       display: inline-block;
       transform-origin: center;
-      min-width: 48px;
+      min-width: 54px;
+      font-variant-numeric: tabular-nums;
     }
 
     .score.flash {
@@ -248,7 +312,7 @@
 
       20% {
         transform: scale(1.9);
-        color: #ff2b2b;
+        color: var(--red);
         text-shadow:
           0 0 12px rgba(255, 0, 0, 0.95),
           0 0 28px rgba(255, 0, 0, 0.9),
@@ -272,73 +336,101 @@
 
     .teams-right {
       display: grid;
-      gap: 18px;
+      gap: 22px;
       min-width: 0;
     }
 
     .team-name {
-      font-size: 22px;
-      font-weight: 600;
+      font-size: 24px;
+      font-weight: 850;
+      letter-spacing: -0.5px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .status {
-      margin-top: 18px;
-      padding-top: 12px;
-      border-top: 1px solid #161616;
-      color: #999;
-      font-size: 13px;
+      display: inline-flex;
+      width: fit-content;
+      margin-top: 4px;
+      padding: 8px 11px;
+      border: 1px solid #25252a;
+      border-radius: 999px;
+      color: #aaa;
+      background: #101012;
+      font-size: 12px;
+      font-weight: 900;
       text-transform: uppercase;
       letter-spacing: 1px;
     }
 
     .live {
-      color: #22c55e;
-      font-weight: 700;
+      color: var(--green);
+      border-color: rgba(34,197,94,0.35);
+      background: rgba(34,197,94,0.08);
     }
 
     .broadcast,
     .plays,
     .reddit-panel {
-      margin-top: 12px;
-      color: #bdbdbd;
+      margin-top: 14px;
+      color: #c8c8ce;
       font-size: 14px;
       line-height: 1.6;
     }
 
     .label {
-      color: #666;
+      color: #777;
       text-transform: uppercase;
       font-size: 11px;
-      letter-spacing: 1px;
+      font-weight: 950;
+      letter-spacing: 1.1px;
       margin-right: 6px;
     }
 
+    .plays {
+      background: rgba(255,255,255,0.025);
+      border: 1px solid #1f1f24;
+      border-radius: 18px;
+      padding: 14px;
+    }
+
     .play {
-      padding: 8px 0;
-      border-bottom: 1px solid #111;
+      padding: 10px 0;
+      border-bottom: 1px solid #1b1b1f;
     }
 
     .play:last-child {
       border-bottom: none;
+      padding-bottom: 0;
     }
 
     .play-time {
-      color: #888;
-      font-weight: 800;
+      display: inline-block;
+      color: var(--gold);
+      font-weight: 950;
       margin-right: 8px;
       font-size: 12px;
     }
 
     .score-change {
-      color: #22c55e;
-      font-weight: 800;
+      color: var(--green);
+      font-weight: 900;
       margin-left: 6px;
     }
 
     .reddit-side {
-      border-left: 1px solid #181818;
-      padding-left: 18px;
+      border-left: 1px solid #242428;
+      padding-left: 20px;
       min-width: 0;
+    }
+
+    .reddit-panel {
+      background: rgba(255,255,255,0.025);
+      border: 1px solid #1f1f24;
+      border-radius: 20px;
+      padding: 16px;
+      margin-top: 0;
     }
 
     .reddit-header {
@@ -346,13 +438,13 @@
       justify-content: space-between;
       align-items: center;
       gap: 12px;
-      margin-bottom: 10px;
+      margin-bottom: 12px;
     }
 
     .reddit-title {
       color: #fff;
-      font-size: 15px;
-      font-weight: 800;
+      font-size: 14px;
+      font-weight: 950;
       text-transform: uppercase;
       letter-spacing: 1px;
     }
@@ -360,8 +452,9 @@
     .reddit-thread-link {
       display: inline-block;
       margin: 6px 0 10px;
-      color: #ff6b6b;
+      color: #ff7777;
       font-size: 13px;
+      font-weight: 800;
       text-decoration: none;
     }
 
@@ -370,8 +463,8 @@
     }
 
     .comment {
-      padding: 10px 0;
-      border-bottom: 1px solid #151515;
+      padding: 11px 0;
+      border-bottom: 1px solid #1b1b1f;
     }
 
     .comment:last-child {
@@ -379,9 +472,10 @@
     }
 
     .comment-meta {
-      color: #777;
+      color: #818188;
       font-size: 12px;
-      margin-bottom: 4px;
+      margin-bottom: 5px;
+      font-weight: 750;
     }
 
     .comment-body {
@@ -393,18 +487,27 @@
 
     .postgame {
       margin-top: 18px;
-      padding-top: 14px;
-      border-top: 1px solid #222;
+      padding-top: 16px;
+      border-top: 1px solid #29292e;
     }
 
     @media (max-width: 950px) {
+      body {
+        padding: 20px;
+      }
+
+      .hero {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
       .game {
         grid-template-columns: 1fr;
       }
 
       .reddit-side {
         border-left: none;
-        border-top: 1px solid #181818;
+        border-top: 1px solid #242428;
         padding-left: 0;
         padding-top: 18px;
       }
@@ -413,63 +516,73 @@
         padding-right: 0;
       }
 
-      .hide-game-button,
-      .spoiler-toggle-button {
+      .card-actions {
         position: static;
-        width: fit-content;
-        margin-bottom: 12px;
+        margin-bottom: 14px;
+      }
+
+      .team-name {
+        white-space: normal;
       }
     }
   </style>
 </head>
 
 <body>
+  <div class="page">
+    <div class="hero">
+      <div>
+        <h1>NBA LIVE SCORES</h1>
+        <div class="subtitle">
+          Live scoreboard, latest plays, broadcasts, and Reddit threads.
+        </div>
+      </div>
 
-  <h1>NBA LIVE SCORES</h1>
-
-  <div id="updated">Loading...</div>
-
-  <div class="controls">
-    <div class="control-row">
-      <label for="scoreSpacing">Score spacing</label>
-
-      <input
-        id="scoreSpacing"
-        type="range"
-        min="110"
-        max="260"
-        value="150"
-      />
+      <div id="updated">Loading...</div>
     </div>
 
-    <div class="reddit-toggle">
-      <input
-        type="checkbox"
-        id="pauseRedditRefresh"
-      />
+    <div class="controls">
+      <div class="control-row">
+        <label for="scoreSpacing">Score spacing</label>
 
-      <label for="pauseRedditRefresh">
-        Pause Reddit Refresh
-      </label>
+        <input
+          id="scoreSpacing"
+          type="range"
+          min="110"
+          max="260"
+          value="150"
+        />
+      </div>
 
-      <span class="reddit-status" id="redditStatus">
-        Reddit auto-refresh active
-      </span>
+      <div class="reddit-toggle">
+        <input
+          type="checkbox"
+          id="pauseRedditRefresh"
+        />
+
+        <label class="toggle-label" for="pauseRedditRefresh">
+          Pause Reddit Refresh
+        </label>
+
+        <span class="reddit-status" id="redditStatus">
+          Reddit auto-refresh active
+        </span>
+      </div>
     </div>
+
+    <div id="hiddenGames">
+      <div class="hidden-title">
+        Hidden games — click to unhide
+      </div>
+
+      <div
+        class="hidden-list"
+        id="hiddenGamesList"
+      ></div>
+    </div>
+
+    <div id="scores"></div>
   </div>
-
-  <div id="hiddenGames">
-    <div class="hidden-title">
-      Hidden games — click to unhide
-    </div>
-
-    <div
-      class="hidden-list"
-      id="hiddenGamesList"
-    ></div>
-  </div>
-
-  <div id="scores"></div>
 
   <script>
     const scoresEl = document.getElementById("scores");
@@ -585,19 +698,21 @@
       card.id = `game-${gameId}`;
 
       card.innerHTML = `
-        <button
-          class="hide-game-button"
-          type="button"
-        >
-          Hide game
-        </button>
+        <div class="card-actions">
+          <button
+            class="spoiler-toggle-button"
+            type="button"
+          >
+            Hide scores
+          </button>
 
-        <button
-          class="spoiler-toggle-button"
-          type="button"
-        >
-          Hide scores
-        </button>
+          <button
+            class="hide-game-button"
+            type="button"
+          >
+            Hide game
+          </button>
+        </div>
 
         <div class="main-side">
           <div class="scoreboard">
